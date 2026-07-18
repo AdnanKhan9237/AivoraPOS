@@ -10,6 +10,7 @@ using NovaPOS.App.ViewModels.Sales;
 using NovaPOS.App.ViewModels.Settings;
 using NovaPOS.App.ViewModels.Shell;
 using NovaPOS.App.ViewModels.Users;
+using NovaPOS.Core.Constants;
 using NovaPOS.Core.Enums;
 using NovaPOS.Core.Interfaces.Licensing;
 using NovaPOS.Core.Interfaces.Navigation;
@@ -95,7 +96,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public object? CurrentPage => _navigationService.CurrentViewModel;
 
     [ObservableProperty]
-    private string _businessName = "NovaPOS Store";
+    private string _businessName = "Store";
 
     [ObservableProperty]
     private string _userDisplayName = string.Empty;
@@ -126,6 +127,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string _updateBannerText = string.Empty;
+
+    [ObservableProperty]
+    private bool _showTitleBarLicensePill;
 
     [ObservableProperty]
     private bool _isLocked;
@@ -167,21 +171,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void RefreshLicenseStatus()
     {
-        LicenseBannerText = _licenseService.CurrentStatus switch
-        {
-            LicenseStatus.Trial => $"Trial: {_licenseService.TrialDaysRemaining ?? 0} day(s) remaining",
-            LicenseStatus.Valid => _licenseService.ExpiresAt.HasValue
-                ? $"{_licenseService.EffectivePlan} until {_licenseService.ExpiresAt.Value:MMM yyyy}"
-                : $"{_licenseService.EffectivePlan} plan",
-            LicenseStatus.GracePeriod => $"Offline grace • {_licenseService.EffectivePlan}",
-            LicenseStatus.Expired => "License expired • Read-only mode",
-            _ => "Activate a license to unlock all features"
-        };
+        var trialDays = _licenseService.TrialDaysRemaining ?? 0;
+        LicenseBannerText = _licenseService.IsTrial
+            ? $"⚠  {ProductInfo.AppName} Trial — {trialDays} day{(trialDays == 1 ? "" : "s")} remaining."
+            : string.Empty;
 
-        ShowLicenseBanner = _licenseService.IsTrial || _licenseService.CurrentStatus is LicenseStatus.Expired or LicenseStatus.Invalid;
-        LicensePillText = _licenseService.IsTrial
-            ? "Trial"
-            : _licenseService.EffectivePlan.ToString();
+        ShowLicenseBanner = _licenseService.IsTrial;
+
+        ShowTitleBarLicensePill = !_licenseService.IsTrial &&
+                                  _licenseService.CurrentStatus is LicenseStatus.Valid or LicenseStatus.GracePeriod;
+
+        LicensePillText = ShowTitleBarLicensePill
+            ? $"● {_licenseService.EffectivePlan}"
+            : string.Empty;
+
         UpdateNavigationVisibility();
     }
 

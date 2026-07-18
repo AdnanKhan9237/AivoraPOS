@@ -149,12 +149,22 @@
             </TabItem>
         </TabControl>
 
-        <Grid Grid.Row="2" Margin="0,12,0,0">
-            <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondaryBrush}" />
-            <TextBlock Text="{Binding AppVersionText}"
-                       HorizontalAlignment="Right"
-                       Foreground="{DynamicResource TextSecondaryBrush}"
-                       FontSize="11" />
-        </Grid>
+        <Border Grid.Row="2" Margin="0,12,0,0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+            <Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button Content="About AivoraPOS"
+                            Padding="10,4"
+                            Command="{Binding ShowAboutCommand}" />
+                </StackPanel>
+                <TextBlock Text="{Binding StatusMessage}"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock Text="{Binding AppVersionText}"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           FontSize="11" />
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

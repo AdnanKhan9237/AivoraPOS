@@ -47,7 +47,7 @@ public sealed class CrashReportingService : ICrashReportingService
 
         var result = MessageBox.Show(
             "Send an anonymous crash report to the developer?\n\nNo business data or personal information is included.",
-            "NovaPOS Crash Report",
+            "AivoraPOS Crash Report",
             MessageBoxButton.YesNoCancel,
             MessageBoxImage.Question);
 
@@ -73,7 +73,7 @@ public sealed class CrashReportingService : ICrashReportingService
         {
             var payload = new
             {
-                app = "NovaPOS",
+                app = ProductInfo.AppName,
                 version = AppVersion.Current,
                 source,
                 message = exception.Message,

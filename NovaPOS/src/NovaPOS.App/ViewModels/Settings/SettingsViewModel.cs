@@ -5,6 +5,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using NovaPOS.App.Views.About;
 using NovaPOS.App.Views.Settings;
 using NovaPOS.Core;
 using NovaPOS.Core.Constants;
@@ -51,7 +52,7 @@ public partial class SettingsViewModel : ObservableObject
         CanManageData = _authorizationService.HasPermission(Permission.ManageSettings);
         CanExportData = _licenseService.CanUse(LicenseFeature.ExportPdfExcel);
 
-        AppVersionText = $"NovaPOS v{AppVersion.Current} • {ProductInfo.CompanyName}";
+        AppVersionText = $"{ProductInfo.AppName}  v{AppVersion.Current}          {ProductInfo.CopyrightShort}";
 
         CurrencyPositions = [CurrencyPosition.Before, CurrencyPosition.After];
         ReceiptWidths = [ReceiptWidth.Mm58, ReceiptWidth.Mm80, ReceiptWidth.A4];
@@ -276,14 +277,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void OpenPurchasePage()
     {
-        try
-        {
-            Process.Start(new ProcessStartInfo("https://novapos.example.com/purchase") { UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Could not open browser: {ex.Message}";
-        }
+        StatusMessage = "Online purchase is coming soon. Contact support to activate your license.";
     }
 
     [RelayCommand]
@@ -324,7 +318,7 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         var confirm = MessageBox.Show(
-            "Restoring will replace the current database. Restart NovaPOS after restore. Continue?",
+            "Restoring will replace the current database. Restart AivoraPOS after restore. Continue?",
             "Restore Database",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
@@ -335,7 +329,7 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         await _dataManagementService.RestoreDatabaseAsync(dialog.FileName);
-        StatusMessage = "Database restored. Please restart NovaPOS.";
+        StatusMessage = "Database restored. Please restart AivoraPOS.";
     }
 
     [RelayCommand]
@@ -602,5 +596,15 @@ public partial class SettingsViewModel : ObservableObject
     {
         var window = new ResetPinWindow(prompt) { Owner = Application.Current.MainWindow };
         return window.ShowDialog() == true ? window.Pin : null;
+    }
+
+    [RelayCommand]
+    private void ShowAbout()
+    {
+        var dialog = new AboutDialog
+        {
+            Owner = Application.Current.MainWindow
+        };
+        dialog.ShowDialog();
     }
 }

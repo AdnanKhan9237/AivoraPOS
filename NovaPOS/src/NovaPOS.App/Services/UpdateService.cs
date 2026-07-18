@@ -78,7 +78,7 @@ public sealed class UpdateService : IUpdateService
         var fileName = Path.GetFileName(new Uri(manifest.Url).LocalPath);
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            fileName = $"NovaPOS-{manifest.Version}.msi";
+            fileName = $"AivoraPOS-{manifest.Version}.msi";
         }
 
         var installerPath = Path.Combine(downloadsDirectory, fileName);

@@ -14,6 +14,7 @@ using NovaPOS.App.ViewModels.Shell;
 using NovaPOS.App.ViewModels.Users;
 using NovaPOS.App.Views;
 using NovaPOS.App.Views.Login;
+using NovaPOS.App.Views.Splash;
 using NovaPOS.Core.Constants;
 using NovaPOS.Core.Entities;
 using NovaPOS.Core.Enums;
@@ -124,13 +125,14 @@ public partial class App : Application
             var updateCoordinator = _host.Services.GetRequiredService<UpdateCoordinator>();
             await updateCoordinator.CheckAsync();
 
-            // 6–7. Login then main window
+            // 6. Splash screen then login and main window
+            await ShowSplashAsync();
             await RunApplicationSessionAsync(updateCoordinator);
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "NovaPOS failed to start.");
-            ShowFriendlyError("NovaPOS could not start. Please check the log files and try again.");
+            Log.Fatal(ex, "{App} failed to start.", ProductInfo.AppName);
+            ShowFriendlyError($"{ProductInfo.AppName} could not start. Please check the log files and try again.");
             Shutdown(-1);
         }
     }
@@ -162,6 +164,13 @@ public partial class App : Application
     }
 
     private IServiceScope CreateScope() => _host!.Services.CreateScope();
+
+    private static async Task ShowSplashAsync()
+    {
+        var splash = new SplashWindow();
+        splash.Show();
+        await splash.WaitForCloseAsync();
+    }
 
     private async Task RunApplicationSessionAsync(UpdateCoordinator? updateCoordinator)
     {
@@ -395,7 +404,7 @@ public partial class App : Application
     {
         Log.Error(e.Exception, "Unhandled UI exception.");
         _ = ReportCrashAsync(e.Exception, "UI");
-        ShowFriendlyError("Something went wrong. The action could not be completed, but NovaPOS will keep running.");
+        ShowFriendlyError("Something went wrong. The action could not be completed, but AivoraPOS will keep running.");
         e.Handled = true;
     }
 
@@ -405,7 +414,7 @@ public partial class App : Application
         {
             Log.Fatal(ex, "Unhandled domain exception.");
             _ = ReportCrashAsync(ex, "Domain");
-            Dispatcher.Invoke(() => ShowFriendlyError("Something went wrong. NovaPOS encountered a critical error."));
+            Dispatcher.Invoke(() => ShowFriendlyError("Something went wrong. AivoraPOS encountered a critical error."));
         }
     }
 
@@ -440,7 +449,7 @@ public partial class App : Application
     {
         MessageBox.Show(
             message,
-            "NovaPOS",
+            ProductInfo.AppName,
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
     }

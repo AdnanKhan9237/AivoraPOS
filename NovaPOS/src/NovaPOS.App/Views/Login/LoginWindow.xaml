@@ -1,11 +1,13 @@
 <Window x:Class="NovaPOS.App.Views.Login.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="NovaPOS - Sign In"
-        Height="520"
+        xmlns:controls="clr-namespace:NovaPOS.App.Controls"
+        Title="AivoraPOS — Sign In"
+        Height="580"
         Width="460"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
+        Icon="Assets/aivorapos.ico"
         Background="{DynamicResource AppBackgroundBrush}">
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -13,15 +15,25 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="NovaPOS"
-                   FontSize="28"
-                   FontWeight="SemiBold"
-                   Foreground="{DynamicResource TextPrimaryBrush}" />
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,12">
+            <controls:BrandLogoView LogoWidth="90" LogoHeight="50"
+                                    HorizontalAlignment="Center"
+                                    FallbackForeground="{DynamicResource TextPrimaryBrush}" />
+            <TextBlock Text="AivoraPOS"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,8,0,0" />
+        </StackPanel>
+
         <TextBlock Grid.Row="1"
-                   Margin="0,8,0,20"
+                   Margin="0,0,0,20"
                    Text="Sign in to continue"
+                   HorizontalAlignment="Center"
                    Foreground="{DynamicResource TextSecondaryBrush}" />
 
         <StackPanel Grid.Row="2">
@@ -67,5 +79,12 @@
                 Content="Sign In"
                 Height="36"
                 Command="{Binding LoginCommand}" />
+
+        <TextBlock Grid.Row="4"
+                   Text="Powered by Aivora Technologies"
+                   FontSize="10"
+                   Foreground="#888888"
+                   HorizontalAlignment="Center"
+                   Margin="0,16,0,0" />
     </Grid>
 </Window>

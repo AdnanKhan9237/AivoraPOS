@@ -1,10 +1,10 @@
 <Project Sdk="WixToolset.Sdk/4.0.6">
 
   <PropertyGroup>
-    <OutputName>NovaPOS-$(Version)</OutputName>
+    <OutputName>AivoraPOS-$(Version)</OutputName>
     <OutputType>Package</OutputType>
     <PublishDir>..\..\artifacts\publish\</PublishDir>
-    <Manufacturer>NovaPOS</Manufacturer>
+    <Manufacturer>Aivora Technologies</Manufacturer>
     <ProductVersion>$(Version).0</ProductVersion>
     <DefineConstants>PublishDir=$(PublishDir);ProductVersion=$(ProductVersion);Manufacturer=$(Manufacturer)</DefineConstants>
   </PropertyGroup>

@@ -1,3 +1,4 @@
+using NovaPOS.Core.Constants;
 using NovaPOS.Core.Models.Sales;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -114,6 +115,12 @@ public static class ReceiptDocumentFactory
                     {
                         column.Item().PaddingTop(8).AlignCenter().Text(data.FooterMessage).FontSize(8);
                     }
+
+                    column.Item().PaddingTop(6).LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
+                    column.Item().PaddingTop(4).AlignCenter()
+                        .Text(ProductInfo.ReceiptAttribution)
+                        .FontSize(7)
+                        .FontColor(Colors.Grey.Medium);
 
                     if (data.ShowWatermark)
                     {

@@ -8,11 +8,12 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>NovaPOS.App</RootNamespace>
     <AssemblyName>NovaPOS</AssemblyName>
-    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\aivorapos.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Assets\app.ico" />
+    <Content Include="Assets\logo.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\aivorapos.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,5 @@
+using NovaPOS.Core.Constants;
 using NovaPOS.Core.Models.Reports;
-using NovaPOS.Reporting.Receipts;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -184,21 +184,36 @@ public static class ReportPdfDocumentFactory
 
                 page.Header().Column(column =>
                 {
-                    column.Item().Text(storeName).FontSize(18).SemiBold().FontColor(PrimaryColor);
-                    column.Item().Text(title).FontSize(14).SemiBold();
-                    column.Item().Text(dateRangeText).FontColor(Colors.Grey.Darken1);
-                    column.Item().Text($"Generated {DateTime.Now:g}").FontSize(8).FontColor(Colors.Grey.Medium);
+                    column.Item().Row(row =>
+                    {
+                        row.RelativeItem().AlignLeft().Column(left =>
+                        {
+                            left.Item().Text(storeName).FontSize(16).SemiBold().FontColor(PrimaryColor);
+                            left.Item().Text(title).FontSize(12).SemiBold();
+                        });
+
+                        row.ConstantItem(180).AlignRight().Column(right =>
+                        {
+                            right.Item().Text(ProductInfo.PdfGeneratedBy).FontSize(8).FontColor(Colors.Grey.Darken1);
+                            right.Item().Text(ProductInfo.CompanyName).FontSize(7).FontColor(Colors.Grey.Medium);
+                        });
+                    });
+
                     column.Item().PaddingTop(8).LineHorizontal(1).LineColor(PrimaryColor);
                 });
 
                 page.Content().PaddingVertical(16).Column(buildContent);
 
-                page.Footer().AlignCenter().Text(text =>
+                page.Footer().Row(row =>
                 {
-                    text.Span("Page ");
-                    text.CurrentPageNumber();
-                    text.Span(" of ");
-                    text.TotalPages();
+                    row.RelativeItem().AlignLeft().Text($"{title} — {dateRangeText}").FontSize(8).FontColor(Colors.Grey.Darken1);
+                    row.RelativeItem().AlignRight().Text(text =>
+                    {
+                        text.Span($"{ProductInfo.PdfFooterRight()}  |  Page ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                        text.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
+                        text.Span(" of ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                        text.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
+                    });
                 });
             });
         }).GeneratePdf();

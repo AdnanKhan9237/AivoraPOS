@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NovaPOS.App.Views.Sales;
 using NovaPOS.Core.Attributes;
+using NovaPOS.Core.Constants;
 using NovaPOS.Core.Entities;
 using NovaPOS.Core.Enums;
 using NovaPOS.Core.Interfaces.Licensing;
@@ -475,7 +476,7 @@ public partial class SalesViewModel : ObservableObject, IDisposable, INavigation
         var cashier = _currentUserService.CurrentUser;
         if (cashier is null)
         {
-            MessageBox.Show("You must be signed in to complete a sale.", "NovaPOS", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("You must be signed in to complete a sale.", ProductInfo.AppName, MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
