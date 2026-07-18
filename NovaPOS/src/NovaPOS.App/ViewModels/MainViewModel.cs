@@ -1,180 +1,332 @@
+using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
-using NovaPOS.Core.Enums;
-using NovaPOS.App.ViewModels.Sales;
-using NovaPOS.App.ViewModels.Reports;
 using NovaPOS.App.ViewModels.Products;
+using NovaPOS.App.ViewModels.Reports;
+using NovaPOS.App.ViewModels.Sales;
+using NovaPOS.App.ViewModels.Settings;
+using NovaPOS.App.ViewModels.Shell;
+using NovaPOS.App.ViewModels.Users;
+using NovaPOS.Core.Enums;
 using NovaPOS.Core.Interfaces.Licensing;
+using NovaPOS.Core.Interfaces.Navigation;
 using NovaPOS.Core.Interfaces.Repositories;
 using NovaPOS.Core.Interfaces.Security;
 using NovaPOS.Core.Interfaces.Services;
 
 namespace NovaPOS.App.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly ILicenseService _licenseService;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAuthorizationService _authorizationService;
+    private readonly INavigationService _navigationService;
     private readonly IInventoryAlertService _inventoryAlertService;
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly Action<AuditLogViewModel> _showAuditLog;
-    private readonly Action _requestLockScreen;
+    private readonly IReportService _reportService;
+    private readonly IAppSettingRepository _appSettingRepository;
+    private readonly ISessionTimeoutService _sessionTimeoutService;
+    private readonly IAuthService _authService;
+    private readonly ReportsViewModel _reportsViewModel;
+    private readonly DispatcherTimer _statusTimer;
 
     public MainViewModel(
         ILicenseService licenseService,
         ICurrentUserService currentUserService,
         IAuthorizationService authorizationService,
+        INavigationService navigationService,
         IInventoryAlertService inventoryAlertService,
-        IServiceScopeFactory scopeFactory,
-        SalesViewModel salesViewModel,
-        Action<AuditLogViewModel> showAuditLog,
-        Action requestLockScreen)
+        IReportService reportService,
+        IAppSettingRepository appSettingRepository,
+        ISessionTimeoutService sessionTimeoutService,
+        IAuthService authService,
+        IUserRepository userRepository,
+        ReportsViewModel reportsViewModel,
+        LockOverlayViewModel lockOverlayViewModel)
     {
         _licenseService = licenseService;
         _currentUserService = currentUserService;
         _authorizationService = authorizationService;
+        _navigationService = navigationService;
         _inventoryAlertService = inventoryAlertService;
-        _scopeFactory = scopeFactory;
-        Sales = salesViewModel;
-        _showAuditLog = showAuditLog;
-        _requestLockScreen = requestLockScreen;
+        _reportService = reportService;
+        _appSettingRepository = appSettingRepository;
+        _sessionTimeoutService = sessionTimeoutService;
+        _authService = authService;
+        _reportsViewModel = reportsViewModel;
+        LockOverlay = lockOverlayViewModel;
+        LockOverlay.Unlocked += OnUnlocked;
 
-        _inventoryAlertService.LowStockCountChanged += (_, _) => UpdateInventoryBadge();
+        _navigationService.CurrentViewModelChanged += OnCurrentViewModelChanged;
+
+        NavigationItems =
+        [
+            CreateNavItem("sales", "Sales", "🏪", typeof(SalesViewModel)),
+            CreateNavItem("inventory", "Inventory", "📦", typeof(ProductsViewModel)),
+            CreateNavItem("reports", "Reports", "📊", typeof(ReportsViewModel)),
+            CreateNavItem("users", "Users", "👥", typeof(UsersViewModel)),
+            CreateNavItem("settings", "Settings", "⚙", typeof(SettingsViewModel)),
+            CreateNavItem("audit", "Audit Log", "🔒", typeof(AuditLogViewModel))
+        ];
+
+        _inventoryAlertService.LowStockCountChanged += (_, _) => UpdateInventoryNavBadge();
+        _currentUserService.CurrentUserChanged += (_, _) => RefreshUserStatus();
+        _sessionTimeoutService.SessionTimedOut += OnSessionTimedOut;
+
+        _statusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _statusTimer.Tick += async (_, _) => await RefreshStatusBarAsync();
+
         RefreshLicenseStatus();
         RefreshUserStatus();
-        _currentUserService.CurrentUserChanged += (_, _) => RefreshUserStatus();
-        _ = RefreshInventoryAlertsAsync();
+        UpdateNavigationVisibility();
+        _ = InitializeAsync();
     }
 
-    [ObservableProperty]
-    private string _statusMessage = "Ready";
+    public LockOverlayViewModel LockOverlay { get; }
+
+    public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
+
+    public object? CurrentPage => _navigationService.CurrentViewModel;
 
     [ObservableProperty]
-    private string _licenseStatusText = string.Empty;
+    private string _businessName = "NovaPOS Store";
 
     [ObservableProperty]
-    private string _userStatusText = string.Empty;
+    private string _userDisplayName = string.Empty;
 
     [ObservableProperty]
-    private bool _showTrialBanner;
+    private string _licenseBannerText = string.Empty;
 
     [ObservableProperty]
-    private bool _canViewAuditLog;
-
-    public SalesViewModel Sales { get; }
+    private bool _showLicenseBanner;
 
     [ObservableProperty]
-    private bool _canViewReports;
+    private string _connectionStatus = "Connected";
 
     [ObservableProperty]
-    private bool _canManageProducts;
+    private string _todaySalesText = "Today: 0 sales $0.00";
 
     [ObservableProperty]
-    private string _inventoryBadgeText = string.Empty;
+    private string _licensePillText = "Trial";
 
     [ObservableProperty]
-    private bool _showInventoryBadge;
+    private string _lowStockStatusText = string.Empty;
 
-    public async Task RefreshInventoryAlertsAsync()
-    {
-        await _inventoryAlertService.RefreshAsync();
-        UpdateInventoryBadge();
-    }
+    [ObservableProperty]
+    private bool _showLowStockStatus;
 
-    private void UpdateInventoryBadge()
-    {
-        ShowInventoryBadge = _inventoryAlertService.LowStockCount > 0 && CanManageProducts;
-        InventoryBadgeText = ShowInventoryBadge ? _inventoryAlertService.LowStockCount.ToString() : string.Empty;
-    }
+    [ObservableProperty]
+    private bool _isLocked;
+
+    public event Action? OnActivateLicenseRequested;
 
     public void RefreshLicenseStatus()
     {
-        LicenseStatusText = _licenseService.CurrentStatus switch
+        LicenseBannerText = _licenseService.CurrentStatus switch
         {
-            LicenseStatus.Trial => $"Trial: {_licenseService.MaxProducts} products max • Watermarked receipts",
-            LicenseStatus.GracePeriod => $"Offline grace period • {_licenseService.EffectivePlan} plan",
-            LicenseStatus.Valid => $"Licensed • {_licenseService.EffectivePlan} plan",
+            LicenseStatus.Trial => $"Trial: {_licenseService.TrialDaysRemaining ?? 0} day(s) remaining",
+            LicenseStatus.Valid => _licenseService.ExpiresAt.HasValue
+                ? $"{_licenseService.EffectivePlan} until {_licenseService.ExpiresAt.Value:MMM yyyy}"
+                : $"{_licenseService.EffectivePlan} plan",
+            LicenseStatus.GracePeriod => $"Offline grace • {_licenseService.EffectivePlan}",
             LicenseStatus.Expired => "License expired • Read-only mode",
-            _ => "License status unknown"
+            _ => "Activate a license to unlock all features"
         };
 
-        ShowTrialBanner = _licenseService.IsTrial;
+        ShowLicenseBanner = _licenseService.IsTrial || _licenseService.CurrentStatus is LicenseStatus.Expired or LicenseStatus.Invalid;
+        LicensePillText = _licenseService.IsTrial
+            ? "Trial"
+            : _licenseService.EffectivePlan.ToString();
+        UpdateNavigationVisibility();
     }
 
     public void RefreshUserStatus()
     {
-        UserStatusText = _currentUserService.CurrentUser is null
+        UserDisplayName = _currentUserService.CurrentUser is null
             ? "Not signed in"
-            : $"{_currentUserService.CurrentUser.FullName} ({_currentUserService.CurrentUser.Role})";
+            : _currentUserService.CurrentUser.FullName;
+        UpdateNavigationVisibility();
+    }
 
-        CanViewAuditLog = _authorizationService.HasPermission(Permission.ViewAuditLog);
-        CanViewReports = _authorizationService.HasPermission(Permission.ViewReports);
-        CanManageProducts = _authorizationService.HasPermission(Permission.ManageProducts);
-        UpdateInventoryBadge();
+    public async Task RefreshInventoryAlertsAsync()
+    {
+        await _inventoryAlertService.RefreshAsync();
+        UpdateInventoryNavBadge();
+        await RefreshStatusBarAsync();
+    }
+
+    public void RequestLock(DateTime lockedAtLocal)
+    {
+        LockOverlay.SetLockedAt(lockedAtLocal);
+        IsLocked = true;
+        _sessionTimeoutService.Stop();
     }
 
     [RelayCommand]
-    private void OpenProducts()
+    private async Task LogoutAsync()
     {
-        using var scope = _scopeFactory.CreateScope();
-        var vm = scope.ServiceProvider.GetRequiredService<ProductsViewModel>();
-
-        if (!Behaviors.AuthorizationBehavior.CanNavigateTo(vm, _authorizationService))
-        {
-            return;
-        }
-
-        var window = new Views.Products.ProductsWindow { DataContext = vm, Owner = System.Windows.Application.Current.MainWindow };
-        window.ShowDialog();
-        _ = RefreshInventoryAlertsAsync();
-    }
-
-    [RelayCommand]
-    private void OpenReports()
-    {
-        using var scope = _scopeFactory.CreateScope();
-        var vm = scope.ServiceProvider.GetRequiredService<ReportsViewModel>();
-
-        if (!Behaviors.AuthorizationBehavior.CanNavigateTo(vm, _authorizationService))
-        {
-            return;
-        }
-
-        vm.UpgradeRequested += () => OnActivateLicenseRequested?.Invoke();
-        var window = new Views.Reports.ReportsWindow { DataContext = vm, Owner = System.Windows.Application.Current.MainWindow };
-        window.ShowDialog();
-        vm.UpgradeRequested -= () => OnActivateLicenseRequested?.Invoke();
+        await _authService.LogoutAsync();
+        RequestLock(DateTime.Now);
     }
 
     [RelayCommand]
     private void ActivateLicense() => OnActivateLicenseRequested?.Invoke();
 
-    [RelayCommand]
-    private void OpenAuditLog()
+    private void OnUnlocked()
     {
-        using var scope = _scopeFactory.CreateScope();
-        var auditLogRepository = scope.ServiceProvider.GetRequiredService<IAuditLogRepository>();
-        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-        var vm = new AuditLogViewModel(auditLogRepository, userRepository);
+        IsLocked = false;
+        RefreshUserStatus();
+        _sessionTimeoutService.Start();
+    }
 
-        if (!Behaviors.AuthorizationBehavior.CanNavigateTo(vm, _authorizationService))
+    private void OnSessionTimedOut(object? sender, EventArgs e)
+    {
+        RequestLock(DateTime.Now);
+    }
+
+    private void OnCurrentViewModelChanged(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(CurrentPage));
+        UpdateSelectedNavigation();
+        _reportsViewModel.UpgradeRequested -= OnReportsUpgradeRequested;
+        if (_navigationService.CurrentViewModel is ReportsViewModel)
+        {
+            _reportsViewModel.UpgradeRequested += OnReportsUpgradeRequested;
+        }
+    }
+
+    private void OnReportsUpgradeRequested() => OnActivateLicenseRequested?.Invoke();
+
+    private NavigationItemViewModel CreateNavItem(string key, string label, string icon, Type viewModelType) =>
+        new(key, label, icon, viewModelType, async () => await NavigateToAsync(viewModelType));
+
+    private async Task NavigateToAsync(Type viewModelType)
+    {
+        if (IsLocked)
         {
             return;
         }
 
-        _showAuditLog(vm);
+        if (!CanAccess(viewModelType))
+        {
+            MessageBox.Show(
+                "You do not have permission to access this screen.",
+                "Access Denied",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        if (await _navigationService.NavigateToAsync(viewModelType))
+        {
+            UpdateSelectedNavigation();
+        }
     }
 
-    [RelayCommand]
-    private async Task SignOutAsync()
+    private bool CanAccess(Type viewModelType)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-        await authService.LogoutAsync();
-        _requestLockScreen();
+        if (viewModelType == typeof(SalesViewModel))
+        {
+            return _authorizationService.HasPermission(Permission.ProcessSale);
+        }
+
+        if (viewModelType == typeof(ProductsViewModel))
+        {
+            return _authorizationService.HasPermission(Permission.ManageProducts);
+        }
+
+        if (viewModelType == typeof(ReportsViewModel))
+        {
+            return _authorizationService.HasPermission(Permission.ViewReports);
+        }
+
+        if (viewModelType == typeof(UsersViewModel))
+        {
+            return _authorizationService.HasPermission(Permission.ManageUsers);
+        }
+
+        if (viewModelType == typeof(AuditLogViewModel))
+        {
+            return _authorizationService.HasPermission(Permission.ViewAuditLog);
+        }
+
+        return true;
     }
 
-    public event Action? OnActivateLicenseRequested;
+    private void UpdateSelectedNavigation()
+    {
+        foreach (var item in NavigationItems)
+        {
+            item.IsSelected = item.ViewModelType == _navigationService.CurrentViewModelType;
+        }
+    }
+
+    private void UpdateNavigationVisibility()
+    {
+        foreach (var item in NavigationItems)
+        {
+            item.IsVisible = CanAccess(item.ViewModelType);
+            item.ShowLockedIcon = item.Key == "reports" && !_licenseService.CanUse(LicenseFeature.FullReports);
+        }
+
+        UpdateInventoryNavBadge();
+    }
+
+    private void UpdateInventoryNavBadge()
+    {
+        var inventory = NavigationItems.FirstOrDefault(x => x.Key == "inventory");
+        if (inventory is null)
+        {
+            return;
+        }
+
+        var count = _inventoryAlertService.LowStockCount;
+        inventory.ShowBadge = count > 0 && inventory.IsVisible;
+        inventory.BadgeText = count > 0 ? count.ToString() : string.Empty;
+    }
+
+    private async Task InitializeAsync()
+    {
+        var storeSetting = await _appSettingRepository.GetByKeyAsync("Store.Name");
+        if (!string.IsNullOrWhiteSpace(storeSetting?.Value))
+        {
+            BusinessName = storeSetting.Value;
+        }
+
+        await RefreshInventoryAlertsAsync();
+        await _navigationService.NavigateToAsync<SalesViewModel>();
+        UpdateSelectedNavigation();
+
+        _statusTimer.Start();
+        await RefreshStatusBarAsync();
+    }
+
+    private async Task RefreshStatusBarAsync()
+    {
+        try
+        {
+            var summary = await _reportService.GetDailySummaryAsync(DateTime.Today);
+            TodaySalesText = $"Today: {summary.TotalTransactions} sales {summary.TotalRevenue:C}";
+        }
+        catch
+        {
+            TodaySalesText = "Today: —";
+        }
+
+        ConnectionStatus = "Connected";
+        ShowLowStockStatus = _inventoryAlertService.LowStockCount > 0 &&
+                             _authorizationService.HasPermission(Permission.ManageProducts);
+        LowStockStatusText = ShowLowStockStatus
+            ? $"Low stock: {_inventoryAlertService.LowStockCount}"
+            : string.Empty;
+    }
+
+    public void Dispose()
+    {
+        _statusTimer.Stop();
+        _sessionTimeoutService.SessionTimedOut -= OnSessionTimedOut;
+        _reportsViewModel.UpgradeRequested -= OnReportsUpgradeRequested;
+    }
 }

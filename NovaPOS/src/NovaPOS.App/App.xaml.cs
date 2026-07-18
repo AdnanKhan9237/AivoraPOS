@@ -3,15 +3,22 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NovaPOS.App.Logging;
+using NovaPOS.App.Services;
 using NovaPOS.App.ViewModels;
+using NovaPOS.App.ViewModels.Login;
+using NovaPOS.App.ViewModels.Products;
 using NovaPOS.App.ViewModels.Reports;
 using NovaPOS.App.ViewModels.Sales;
-using NovaPOS.App.ViewModels.Products;
+using NovaPOS.App.ViewModels.Settings;
+using NovaPOS.App.ViewModels.Shell;
+using NovaPOS.App.ViewModels.Users;
 using NovaPOS.App.Views;
+using NovaPOS.App.Views.Login;
 using NovaPOS.Core.Constants;
 using NovaPOS.Core.Entities;
 using NovaPOS.Core.Enums;
 using NovaPOS.Core.Interfaces.Licensing;
+using NovaPOS.Core.Interfaces.Navigation;
 using NovaPOS.Core.Interfaces.Repositories;
 using NovaPOS.Core.Interfaces.Security;
 using NovaPOS.Core.Interfaces.Services;
@@ -80,22 +87,25 @@ public partial class App : Application
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
                 }
-                else if (integrityResult.IsRunningInVirtualMachine)
-                {
-                    Log.Warning("Application is running inside a virtual machine.");
-                }
             }
 
+            // 1–2. Database migrations and seeding
             using (var initScope = CreateScope())
             {
                 var initializer = initScope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
                 await initializer.InitializeAsync();
+
+                var themeService = initScope.ServiceProvider.GetRequiredService<IThemeService>();
+                await themeService.InitializeAsync();
+                await ConfigureSessionTimeoutAsync(initScope.ServiceProvider);
             }
 
+            // 3. License gate
+            LicenseCheckResult licenseResult;
             using (var licenseScope = CreateScope())
             {
                 var licenseService = licenseScope.ServiceProvider.GetRequiredService<ILicenseService>();
-                var licenseResult = await licenseService.ValidateOnLaunchAsync();
+                licenseResult = await licenseService.ValidateOnLaunchAsync();
 
                 if (!await HandleLicenseGateAsync(licenseService, licenseResult))
                 {
@@ -104,23 +114,19 @@ public partial class App : Application
                 }
             }
 
-            var sessionCoordinator = _host.Services.GetRequiredService<ApplicationSessionCoordinator>();
-            sessionCoordinator.LockScreenRequested += OnLockScreenRequested;
-
-            using (var sessionLicenseScope = CreateScope())
+            // 4. Trial notice
+            if (licenseResult.IsTrial)
             {
-                var licenseService = sessionLicenseScope.ServiceProvider.GetRequiredService<ILicenseService>();
-                await RunApplicationSessionAsync(licenseService);
+                await ShowTrialNoticeAsync(licenseResult);
             }
+
+            // 5–6. Login then main window
+            await RunApplicationSessionAsync();
         }
         catch (Exception ex)
         {
             Log.Fatal(ex, "NovaPOS failed to start.");
-            MessageBox.Show(
-                "NovaPOS could not start. Please check the log files and try again.",
-                "Startup Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            ShowFriendlyError("NovaPOS could not start. Please check the log files and try again.");
             Shutdown(-1);
         }
     }
@@ -132,70 +138,61 @@ public partial class App : Application
         services.AddNovaPOSLicensing();
         services.AddNovaPOSReporting();
 
+        services.AddScoped<IThemeService, ThemeService>();
+        services.AddScoped<INavigationService, NavigationService>();
+
         services.AddSingleton<ApplicationSessionCoordinator>();
         services.AddSingleton<MainWindow>();
+
         services.AddScoped<SalesViewModel>();
-        services.AddScoped<ReportsViewModel>();
         services.AddScoped<ProductsViewModel>();
-        services.AddScoped<MainViewModel>(sp =>
-        {
-            var coordinator = sp.GetRequiredService<ApplicationSessionCoordinator>();
-            return new MainViewModel(
-                sp.GetRequiredService<ILicenseService>(),
-                sp.GetRequiredService<ICurrentUserService>(),
-                sp.GetRequiredService<IAuthorizationService>(),
-                sp.GetRequiredService<IInventoryAlertService>(),
-                sp.GetRequiredService<IServiceScopeFactory>(),
-                sp.GetRequiredService<SalesViewModel>(),
-                vm =>
-                {
-                    var window = new AuditLogWindow { DataContext = vm, Owner = Current.MainWindow };
-                    window.ShowDialog();
-                },
-                () => coordinator.RequestLockScreen());
-        });
+        services.AddScoped<ReportsViewModel>();
+        services.AddScoped<AuditLogViewModel>();
+        services.AddScoped<SettingsViewModel>();
+        services.AddScoped<UsersViewModel>();
+        services.AddScoped<LockOverlayViewModel>();
+        services.AddScoped<MainViewModel>();
     }
 
     private IServiceScope CreateScope() => _host!.Services.CreateScope();
 
-    private async Task RunApplicationSessionAsync(ILicenseService licenseService)
+    private async Task RunApplicationSessionAsync()
     {
-        var sessionTimeout = _host!.Services.GetRequiredService<ISessionTimeoutService>();
+        var user = await ShowLoginWindowAsync();
+        if (user is null)
+        {
+            Shutdown(0);
+            return;
+        }
+
+        _mainWindow = _host!.Services.GetRequiredService<MainWindow>();
+        _sessionScope = CreateScope();
+
+        var sessionTimeout = _sessionScope.ServiceProvider.GetRequiredService<ISessionTimeoutService>();
         sessionTimeout.SessionTimedOut += OnSessionTimedOut;
 
-        while (true)
+        var mainViewModel = _sessionScope.ServiceProvider.GetRequiredService<MainViewModel>();
+        mainViewModel.OnActivateLicenseRequested += OnActivateLicenseRequested;
+        mainViewModel.RefreshLicenseStatus();
+        mainViewModel.RefreshUserStatus();
+        await mainViewModel.RefreshInventoryAlertsAsync();
+
+        _mainWindow.DataContext = mainViewModel;
+        _mainWindow.Show();
+        sessionTimeout.Start();
+
+        var closed = await WaitForMainWindowCloseAsync();
+        sessionTimeout.Stop();
+        sessionTimeout.SessionTimedOut -= OnSessionTimedOut;
+        mainViewModel.OnActivateLicenseRequested -= OnActivateLicenseRequested;
+        mainViewModel.Dispose();
+
+        _sessionScope.Dispose();
+        _sessionScope = null;
+
+        if (!closed)
         {
-            var user = await ShowLockScreenAsync();
-            if (user is null)
-            {
-                Shutdown(0);
-                return;
-            }
-
-            _mainWindow ??= _host.Services.GetRequiredService<MainWindow>();
-            _sessionScope?.Dispose();
-            _sessionScope = CreateScope();
-            var mainViewModel = _sessionScope.ServiceProvider.GetRequiredService<MainViewModel>();
-            mainViewModel.RefreshLicenseStatus();
-            mainViewModel.RefreshUserStatus();
-            mainViewModel.OnActivateLicenseRequested += OnActivateLicenseRequested;
-            await mainViewModel.RefreshInventoryAlertsAsync();
-
-            _mainWindow.DataContext = mainViewModel;
-            _mainWindow.Show();
-            sessionTimeout.Start();
-
-            var sessionEnded = await WaitForMainWindowCloseAsync();
-            sessionTimeout.Stop();
-            mainViewModel.OnActivateLicenseRequested -= OnActivateLicenseRequested;
-            _sessionScope.Dispose();
-            _sessionScope = null;
-
-            if (!sessionEnded)
-            {
-                Shutdown(0);
-                return;
-            }
+            Shutdown(0);
         }
     }
 
@@ -211,25 +208,18 @@ public partial class App : Application
         _ = ShowActivationDialogAsync(licenseService, mainViewModel);
     }
 
-    private void OnLockScreenRequested()
-    {
-        Dispatcher.Invoke(() => _mainWindow?.Hide());
-    }
-
     private void OnSessionTimedOut(object? sender, EventArgs e)
     {
         Dispatcher.Invoke(() =>
         {
-            MessageBox.Show(
-                "Your session was locked due to inactivity.",
-                "Session Locked",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            _mainWindow?.Hide();
+            if (_sessionScope?.ServiceProvider.GetService<MainViewModel>() is MainViewModel mainViewModel)
+            {
+                mainViewModel.RequestLock(DateTime.Now);
+            }
         });
     }
 
-    private Task<User?> ShowLockScreenAsync()
+    private Task<User?> ShowLoginWindowAsync()
     {
         var tcs = new TaskCompletionSource<User?>();
         var loginCompleted = false;
@@ -238,7 +228,7 @@ public partial class App : Application
         var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
-        var window = new LockScreenWindow { Owner = _mainWindow };
+        var window = new LoginWindow();
         window.DataContext = new LockScreenViewModel(
             authService,
             userRepository,
@@ -261,6 +251,22 @@ public partial class App : Application
         return tcs.Task;
     }
 
+    private Task ShowTrialNoticeAsync(LicenseCheckResult licenseResult)
+    {
+        var tcs = new TaskCompletionSource();
+        var window = new TrialRemainingNoticeWindow();
+        window.DataContext = new TrialNoticeViewModel(
+            licenseResult.Message,
+            () =>
+            {
+                tcs.TrySetResult();
+                window.Close();
+            });
+
+        window.ShowDialog();
+        return tcs.Task;
+    }
+
     private Task<bool> WaitForMainWindowCloseAsync()
     {
         if (_mainWindow is null)
@@ -273,21 +279,10 @@ public partial class App : Application
         void OnClosed(object? sender, EventArgs e)
         {
             _mainWindow!.Closed -= OnClosed;
-            _mainWindow.IsVisibleChanged -= OnVisibilityChanged;
             tcs.TrySetResult(false);
         }
 
-        void OnVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            if (_mainWindow is { IsVisible: false, IsLoaded: true })
-            {
-                tcs.TrySetResult(true);
-            }
-        }
-
         _mainWindow.Closed += OnClosed;
-        _mainWindow.IsVisibleChanged += OnVisibilityChanged;
-
         return tcs.Task;
     }
 
@@ -297,13 +292,13 @@ public partial class App : Application
         {
             case LicenseStatus.Invalid:
             {
-                var activate = await ShowGateDialogAsync<InvalidLicenseWindow>(licenseResult.Message, showReadOnly: false);
+                var activate = await ShowGateDialogAsync<InvalidLicenseWindow>(licenseResult.Message);
                 return activate && await ShowActivationDialogAsync(licenseService, null);
             }
 
             case LicenseStatus.Expired when licenseResult.IsReadOnlyMode:
             {
-                var activate = await ShowGateDialogAsync<LicenseExpiredWindow>(licenseResult.Message, showReadOnly: true);
+                var activate = await ShowGateDialogAsync<LicenseExpiredWindow>(licenseResult.Message);
                 if (!activate)
                 {
                     return true;
@@ -317,7 +312,7 @@ public partial class App : Application
         }
     }
 
-    private Task<bool> ShowGateDialogAsync<TWindow>(string message, bool showReadOnly)
+    private Task<bool> ShowGateDialogAsync<TWindow>(string message)
         where TWindow : Window, new()
     {
         var tcs = new TaskCompletionSource<bool>();
@@ -356,8 +351,21 @@ public partial class App : Application
         return activated;
     }
 
+    private static async Task ConfigureSessionTimeoutAsync(IServiceProvider services)
+    {
+        var appSettingRepository = services.GetRequiredService<IAppSettingRepository>();
+        var sessionTimeout = services.GetRequiredService<ISessionTimeoutService>();
+        var setting = await appSettingRepository.GetByKeyAsync("Session.IdleTimeoutMinutes");
+        if (setting is not null && int.TryParse(setting.Value, out var minutes) && minutes > 0)
+        {
+            sessionTimeout.IdleTimeout = TimeSpan.FromMinutes(minutes);
+        }
+    }
+
     protected override async void OnExit(ExitEventArgs e)
     {
+        _sessionScope?.Dispose();
+
         if (_host is not null)
         {
             await _host.StopAsync();
@@ -371,11 +379,7 @@ public partial class App : Application
     private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         Log.Error(e.Exception, "Unhandled UI exception.");
-        MessageBox.Show(
-            "An unexpected error occurred. The action could not be completed.",
-            "NovaPOS",
-            MessageBoxButton.OK,
-            MessageBoxImage.Warning);
+        ShowFriendlyError("Something went wrong. The action could not be completed, but NovaPOS will keep running.");
         e.Handled = true;
     }
 
@@ -384,13 +388,24 @@ public partial class App : Application
         if (e.ExceptionObject is Exception ex)
         {
             Log.Fatal(ex, "Unhandled domain exception.");
+            Dispatcher.Invoke(() => ShowFriendlyError("Something went wrong. NovaPOS encountered a critical error."));
         }
     }
 
     private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         Log.Error(e.Exception, "Unobserved task exception.");
+        Dispatcher.Invoke(() => ShowFriendlyError("Something went wrong while completing a background task."));
         e.SetObserved();
+    }
+
+    private static void ShowFriendlyError(string message)
+    {
+        MessageBox.Show(
+            message,
+            "NovaPOS",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
     }
 
     private sealed class SensitiveLogEnricher : ILogEventEnricher

@@ -38,6 +38,8 @@ public sealed class LicenseService : ILicenseService
     public int? MaxProducts => IsTrial ? LicenseConstants.TrialMaxProducts : EffectivePlan.GetMaxProducts();
     public int? MaxCashiers => EffectivePlan.GetMaxCashiers();
     public bool ShowReceiptWatermark => IsTrial;
+    public int? TrialDaysRemaining => _lastCheckResult?.TrialDaysRemaining;
+    public DateTime? ExpiresAt => _lastCheckResult?.ExpiresAt;
 
     public async Task<LicenseCheckResult> ValidateOnLaunchAsync(CancellationToken cancellationToken = default)
     {

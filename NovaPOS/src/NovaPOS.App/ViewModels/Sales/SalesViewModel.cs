@@ -11,12 +11,13 @@ using NovaPOS.Core.Interfaces.Licensing;
 using NovaPOS.Core.Interfaces.Repositories;
 using NovaPOS.Core.Interfaces.Security;
 using NovaPOS.Core.Interfaces.Services;
+using NovaPOS.Core.Interfaces.Navigation;
 using NovaPOS.Core.Models.Sales;
 
 namespace NovaPOS.App.ViewModels.Sales;
 
 [RequiresPermission(Permission.ProcessSale)]
-public partial class SalesViewModel : ObservableObject, IDisposable
+public partial class SalesViewModel : ObservableObject, IDisposable, INavigationGuard
 {
     private static readonly Guid AllCategoriesId = Guid.Empty;
 
@@ -547,6 +548,22 @@ public partial class SalesViewModel : ObservableObject, IDisposable
         window.Owner = Application.Current.MainWindow;
         window.ShowDialog();
         return await tcs.Task;
+    }
+
+    public Task<bool> CanNavigateAwayAsync()
+    {
+        if (!HasCartItems)
+        {
+            return Task.FromResult(true);
+        }
+
+        var result = MessageBox.Show(
+            "You have items in the cart. Leave the sales screen?",
+            "Unsaved Cart",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        return Task.FromResult(result == MessageBoxResult.Yes);
     }
 
     public void Dispose()
