@@ -15,8 +15,7 @@ public class CategoryRepository : Repository<Category>, ICategoryRepository
         return await DbSet
             .AsNoTracking()
             .Where(x => x.IsActive)
-            .OrderBy(x => x.SortOrder)
-            .ThenBy(x => x.Name)
+            .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
     }
 }

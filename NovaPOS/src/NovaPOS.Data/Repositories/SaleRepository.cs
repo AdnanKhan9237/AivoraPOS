@@ -15,13 +15,12 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
         return await DbSet.FirstOrDefaultAsync(x => x.SaleNumber == saleNumber, cancellationToken);
     }
 
-    public async Task<Sale?> GetWithDetailsAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Sale?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await DbSet
             .Include(x => x.Cashier)
             .Include(x => x.Items)
             .ThenInclude(x => x.Product)
-            .Include(x => x.Payments)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 

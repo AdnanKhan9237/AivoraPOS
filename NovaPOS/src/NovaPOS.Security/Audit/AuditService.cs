@@ -18,31 +18,33 @@ public class AuditService : IAuditService
 
     public async Task LogAsync(
         string action,
-        string entityType,
+        string? entityType = null,
         string? entityId = null,
-        string? details = null,
-        int? userId = null,
-        string? username = null,
+        string? oldValues = null,
+        string? newValues = null,
+        Guid? userId = null,
+        string? ipAddress = null,
         CancellationToken cancellationToken = default)
     {
         var entry = new AuditLog
         {
             UserId = userId,
-            Username = username ?? "system",
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
-            Details = details
+            OldValues = oldValues,
+            NewValues = newValues,
+            IpAddress = ipAddress,
+            MachineName = Environment.MachineName
         };
 
         await _auditLogRepository.AddAsync(entry, cancellationToken);
         await _auditLogRepository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation(
-            "Audit: {Action} on {EntityType} ({EntityId}) by {Username}",
+            "Audit: {Action} on {EntityType} ({EntityId})",
             action,
             entityType,
-            entityId,
-            entry.Username);
+            entityId);
     }
 }

@@ -4,10 +4,11 @@ public interface IAuditService
 {
     Task LogAsync(
         string action,
-        string entityType,
+        string? entityType = null,
         string? entityId = null,
-        string? details = null,
-        int? userId = null,
-        string? username = null,
+        string? oldValues = null,
+        string? newValues = null,
+        Guid? userId = null,
+        string? ipAddress = null,
         CancellationToken cancellationToken = default);
 }

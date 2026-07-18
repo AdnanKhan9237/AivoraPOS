@@ -23,32 +23,16 @@ namespace NovaPOS.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
-
-                    b.Property<int?>("UpdatedByUserId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Value")
                         .IsRequired()
-                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -56,27 +40,21 @@ namespace NovaPOS.Data.Migrations
                     b.HasIndex("Key")
                         .IsUnique();
 
-                    b.HasIndex("UpdatedByUserId");
-
                     b.ToTable("AppSettings", (string)null);
                 });
 
             modelBuilder.Entity("NovaPOS.Core.Entities.AuditLog", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasMaxLength(100)
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Details")
-                        .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EntityId")
@@ -84,7 +62,6 @@ namespace NovaPOS.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EntityType")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
@@ -92,15 +69,21 @@ namespace NovaPOS.Data.Migrations
                         .HasMaxLength(45)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("MachineName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(50)
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -114,9 +97,9 @@ namespace NovaPOS.Data.Migrations
 
             modelBuilder.Entity("NovaPOS.Core.Entities.Category", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -133,9 +116,6 @@ namespace NovaPOS.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
@@ -147,41 +127,52 @@ namespace NovaPOS.Data.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.Inventory", b =>
+            modelBuilder.Entity("NovaPOS.Core.Entities.InventoryMovement", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("LastRestockedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ProductId")
+                    b.Property<int>("MovementType")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("QuantityOnHand")
-                        .HasPrecision(18, 3)
+                    b.Property<Guid>("ProductId")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("ReorderLevel")
-                        .HasPrecision(18, 3)
+                    b.Property<int>("QuantityAfter")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityBefore")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityChange")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId")
-                        .IsUnique();
+                    b.HasIndex("CreatedAt");
 
-                    b.ToTable("Inventories", (string)null);
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("InventoryMovements", (string)null);
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.LicenseRecord", b =>
+            modelBuilder.Entity("NovaPOS.Core.Entities.LicenseInfo", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -190,11 +181,9 @@ namespace NovaPOS.Data.Migrations
                     b.Property<DateTime>("ActivatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("CompanyName")
+                    b.Property<string>("BusinessName")
+                        .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("ExpiresAt")
@@ -202,91 +191,58 @@ namespace NovaPOS.Data.Migrations
 
                     b.Property<string>("HardwareFingerprint")
                         .IsRequired()
-                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool>("IsValid")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime?>("LastValidatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LicenseKeyHash")
+                    b.Property<string>("LicenseKey")
                         .IsRequired()
-                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Plan")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.ToTable("LicenseRecords", (string)null);
-                });
-
-            modelBuilder.Entity("NovaPOS.Core.Entities.Payment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PaymentMethod")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ReferenceNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SaleId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SaleId");
-
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("LicenseInfo", (string)null);
                 });
 
             modelBuilder.Entity("NovaPOS.Core.Entities.Product", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Barcode")
-                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Barcode")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
 
-                    b.Property<decimal>("CostPrice")
-                        .HasPrecision(18, 2)
+                    b.Property<Guid>("CategoryId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
+
+                    b.Property<int>("LowStockThreshold")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(5);
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("PurchasePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("SalePrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Sku")
@@ -294,16 +250,14 @@ namespace NovaPOS.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("TaxRate")
-                        .HasPrecision(5, 4)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("TrackInventory")
+                    b.Property<int>("StockQuantity")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
+                    b.Property<decimal>("TaxRate")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue(0m);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
@@ -320,48 +274,27 @@ namespace NovaPOS.Data.Migrations
                     b.ToTable("Products", (string)null);
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.Return", b =>
+            modelBuilder.Entity("NovaPOS.Core.Entities.Refund", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("OriginalSaleId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("OriginalSaleId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("ProcessedById")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("ProcessedById")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Reason")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("RefundMethod")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ReturnNumber")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("SubTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("TaxAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("TotalAmount")
+                    b.Property<decimal>("RefundAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
@@ -369,45 +302,36 @@ namespace NovaPOS.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("OriginalSaleId");
 
                     b.HasIndex("ProcessedById");
 
-                    b.HasIndex("ReturnNumber")
-                        .IsUnique();
-
-                    b.ToTable("Returns", (string)null);
+                    b.ToTable("Refunds", (string)null);
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.ReturnItem", b =>
+            modelBuilder.Entity("NovaPOS.Core.Entities.RefundItem", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("LineTotal")
+                    b.Property<int>("QuantityReturned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("RefundAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("OriginalSaleItemId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Quantity")
-                        .HasPrecision(18, 3)
+                    b.Property<Guid>("RefundId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ReturnId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
+                    b.Property<Guid>("SaleItemId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -415,25 +339,28 @@ namespace NovaPOS.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OriginalSaleItemId");
+                    b.HasIndex("RefundId");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("SaleItemId");
 
-                    b.HasIndex("ReturnId");
-
-                    b.ToTable("ReturnItems", (string)null);
+                    b.ToTable("RefundItems", (string)null);
                 });
 
             modelBuilder.Entity("NovaPOS.Core.Entities.Sale", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("CashierId")
-                        .HasColumnType("INTEGER");
+                    b.Property<decimal>("AmountPaid")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("CompletedAt")
+                    b.Property<Guid>("CashierId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Change")
+                        .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -444,8 +371,10 @@ namespace NovaPOS.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Notes")
-                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("SaleNumber")
                         .IsRequired()
@@ -474,6 +403,8 @@ namespace NovaPOS.Data.Migrations
 
                     b.HasIndex("CashierId");
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("SaleNumber")
                         .IsUnique();
 
@@ -482,42 +413,42 @@ namespace NovaPOS.Data.Migrations
 
             modelBuilder.Entity("NovaPOS.Core.Entities.SaleItem", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("DiscountAmount")
+                    b.Property<decimal>("Discount")
+                        .ValueGeneratedOnAdd()
                         .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue(0m);
 
                     b.Property<decimal>("LineTotal")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("Quantity")
-                        .HasPrecision(18, 3)
+                    b.Property<string>("ProductSku")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("SaleId")
+                    b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("TaxAmount")
-                        .HasPrecision(18, 2)
+                    b.Property<Guid>("SaleId")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("TaxRate")
-                        .HasPrecision(5, 4)
+                        .HasPrecision(18, 4)
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("UnitPrice")
@@ -536,65 +467,16 @@ namespace NovaPOS.Data.Migrations
                     b.ToTable("SaleItems", (string)null);
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.StockMovement", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("MovementType")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("QuantityAfter")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("QuantityChange")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("ReferenceId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ReferenceType")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("StockMovements", (string)null);
-                });
-
             modelBuilder.Entity("NovaPOS.Core.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("DisplayName")
+                    b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
@@ -607,12 +489,10 @@ namespace NovaPOS.Data.Migrations
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PinHash")
                         .IsRequired()
-                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Role")
@@ -634,16 +514,6 @@ namespace NovaPOS.Data.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.AppSetting", b =>
-                {
-                    b.HasOne("NovaPOS.Core.Entities.User", "UpdatedByUser")
-                        .WithMany()
-                        .HasForeignKey("UpdatedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("UpdatedByUser");
-                });
-
             modelBuilder.Entity("NovaPOS.Core.Entities.AuditLog", b =>
                 {
                     b.HasOne("NovaPOS.Core.Entities.User", "User")
@@ -654,26 +524,23 @@ namespace NovaPOS.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.Inventory", b =>
+            modelBuilder.Entity("NovaPOS.Core.Entities.InventoryMovement", b =>
                 {
                     b.HasOne("NovaPOS.Core.Entities.Product", "Product")
-                        .WithOne("Inventory")
-                        .HasForeignKey("NovaPOS.Core.Entities.Inventory", "ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithMany("InventoryMovements")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("NovaPOS.Core.Entities.User", "User")
+                        .WithMany("InventoryMovements")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Product");
-                });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.Payment", b =>
-                {
-                    b.HasOne("NovaPOS.Core.Entities.Sale", "Sale")
-                        .WithMany("Payments")
-                        .HasForeignKey("SaleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Sale");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("NovaPOS.Core.Entities.Product", b =>
@@ -687,16 +554,16 @@ namespace NovaPOS.Data.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.Return", b =>
+            modelBuilder.Entity("NovaPOS.Core.Entities.Refund", b =>
                 {
                     b.HasOne("NovaPOS.Core.Entities.Sale", "OriginalSale")
-                        .WithMany("Returns")
+                        .WithMany("Refunds")
                         .HasForeignKey("OriginalSaleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("NovaPOS.Core.Entities.User", "ProcessedBy")
-                        .WithMany("ProcessedReturns")
+                        .WithMany("ProcessedRefunds")
                         .HasForeignKey("ProcessedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -706,31 +573,23 @@ namespace NovaPOS.Data.Migrations
                     b.Navigation("ProcessedBy");
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.ReturnItem", b =>
+            modelBuilder.Entity("NovaPOS.Core.Entities.RefundItem", b =>
                 {
-                    b.HasOne("NovaPOS.Core.Entities.SaleItem", "OriginalSaleItem")
-                        .WithMany("ReturnItems")
-                        .HasForeignKey("OriginalSaleItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("NovaPOS.Core.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("NovaPOS.Core.Entities.Return", "Return")
+                    b.HasOne("NovaPOS.Core.Entities.Refund", "Refund")
                         .WithMany("Items")
-                        .HasForeignKey("ReturnId")
+                        .HasForeignKey("RefundId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("OriginalSaleItem");
+                    b.HasOne("NovaPOS.Core.Entities.SaleItem", "SaleItem")
+                        .WithMany("RefundItems")
+                        .HasForeignKey("SaleItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("Product");
+                    b.Navigation("Refund");
 
-                    b.Navigation("Return");
+                    b.Navigation("SaleItem");
                 });
 
             modelBuilder.Entity("NovaPOS.Core.Entities.Sale", b =>
@@ -763,25 +622,6 @@ namespace NovaPOS.Data.Migrations
                     b.Navigation("Sale");
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.StockMovement", b =>
-                {
-                    b.HasOne("NovaPOS.Core.Entities.Product", "Product")
-                        .WithMany("StockMovements")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("NovaPOS.Core.Entities.User", "User")
-                        .WithMany("StockMovements")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("NovaPOS.Core.Entities.Category", b =>
                 {
                     b.Navigation("Products");
@@ -789,14 +629,12 @@ namespace NovaPOS.Data.Migrations
 
             modelBuilder.Entity("NovaPOS.Core.Entities.Product", b =>
                 {
-                    b.Navigation("Inventory");
+                    b.Navigation("InventoryMovements");
 
                     b.Navigation("SaleItems");
-
-                    b.Navigation("StockMovements");
                 });
 
-            modelBuilder.Entity("NovaPOS.Core.Entities.Return", b =>
+            modelBuilder.Entity("NovaPOS.Core.Entities.Refund", b =>
                 {
                     b.Navigation("Items");
                 });
@@ -805,25 +643,23 @@ namespace NovaPOS.Data.Migrations
                 {
                     b.Navigation("Items");
 
-                    b.Navigation("Payments");
-
-                    b.Navigation("Returns");
+                    b.Navigation("Refunds");
                 });
 
             modelBuilder.Entity("NovaPOS.Core.Entities.SaleItem", b =>
                 {
-                    b.Navigation("ReturnItems");
+                    b.Navigation("RefundItems");
                 });
 
             modelBuilder.Entity("NovaPOS.Core.Entities.User", b =>
                 {
                     b.Navigation("AuditLogs");
 
-                    b.Navigation("ProcessedReturns");
+                    b.Navigation("InventoryMovements");
+
+                    b.Navigation("ProcessedRefunds");
 
                     b.Navigation("Sales");
-
-                    b.Navigation("StockMovements");
                 });
 #pragma warning restore 612, 618
         }

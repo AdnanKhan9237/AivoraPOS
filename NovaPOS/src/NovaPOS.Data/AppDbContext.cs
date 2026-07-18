@@ -13,16 +13,14 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
-    public DbSet<Inventory> Inventories => Set<Inventory>();
-    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<Sale> Sales => Set<Sale>();
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
-    public DbSet<Payment> Payments => Set<Payment>();
-    public DbSet<Return> Returns => Set<Return>();
-    public DbSet<ReturnItem> ReturnItems => Set<ReturnItem>();
+    public DbSet<Refund> Refunds => Set<Refund>();
+    public DbSet<RefundItem> RefundItems => Set<RefundItem>();
+    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
-    public DbSet<LicenseRecord> LicenseRecords => Set<LicenseRecord>();
+    public DbSet<LicenseInfo> LicenseInfos => Set<LicenseInfo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,6 +40,14 @@ public class AppDbContext : DbContext
             }
 
             if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.UpdatedAt = utcNow;
+            }
+        }
+
+        foreach (var entry in ChangeTracker.Entries<AppSetting>())
+        {
+            if (entry.State is EntityState.Added or EntityState.Modified)
             {
                 entry.Entity.UpdatedAt = utcNow;
             }

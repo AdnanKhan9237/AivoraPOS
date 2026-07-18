@@ -9,12 +9,14 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
     public void Configure(EntityTypeBuilder<SaleItem> builder)
     {
         builder.ToTable("SaleItems");
-        builder.Property(x => x.ProductName).HasMaxLength(200).IsRequired();
-        builder.Property(x => x.Quantity).HasPrecision(18, 3);
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.ProductName).IsRequired();
+        builder.Property(x => x.ProductSku).IsRequired();
         builder.Property(x => x.UnitPrice).HasPrecision(18, 2);
-        builder.Property(x => x.TaxRate).HasPrecision(5, 4);
-        builder.Property(x => x.TaxAmount).HasPrecision(18, 2);
-        builder.Property(x => x.DiscountAmount).HasPrecision(18, 2);
+        builder.Property(x => x.TaxRate).HasPrecision(18, 4);
+        builder.Property(x => x.Discount).HasPrecision(18, 2).HasDefaultValue(0m);
         builder.Property(x => x.LineTotal).HasPrecision(18, 2);
 
         builder.HasOne(x => x.Sale)

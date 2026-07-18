@@ -13,7 +13,6 @@ public class ProductRepository : Repository<Product>, IProductRepository
     public async Task<Product?> GetBySkuAsync(string sku, CancellationToken cancellationToken = default)
     {
         return await DbSet
-            .Include(x => x.Inventory)
             .Include(x => x.Category)
             .FirstOrDefaultAsync(x => x.Sku == sku, cancellationToken);
     }
@@ -21,16 +20,14 @@ public class ProductRepository : Repository<Product>, IProductRepository
     public async Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
         return await DbSet
-            .Include(x => x.Inventory)
             .Include(x => x.Category)
             .FirstOrDefaultAsync(x => x.Barcode == barcode, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Product>> GetActiveByCategoryAsync(int categoryId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Product>> GetActiveByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
         return await DbSet
             .AsNoTracking()
-            .Include(x => x.Inventory)
             .Where(x => x.CategoryId == categoryId && x.IsActive)
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
@@ -42,13 +39,21 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
         return await DbSet
             .AsNoTracking()
-            .Include(x => x.Inventory)
             .Include(x => x.Category)
             .Where(x => x.IsActive && (
                 x.Name.Contains(term) ||
                 x.Sku.Contains(term) ||
                 (x.Barcode != null && x.Barcode.Contains(term))))
             .OrderBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Product>> GetLowStockAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AsNoTracking()
+            .Where(x => x.IsActive && x.StockQuantity <= x.LowStockThreshold)
+            .OrderBy(x => x.StockQuantity)
             .ToListAsync(cancellationToken);
     }
 }

@@ -27,4 +27,9 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public override Task DeleteAsync(AuditLog entity, CancellationToken cancellationToken = default)
+    {
+        throw new InvalidOperationException("Audit logs cannot be deleted.");
+    }
 }

@@ -4,23 +4,39 @@ using NovaPOS.Core.Interfaces.Repositories;
 
 namespace NovaPOS.Data.Repositories;
 
-public class AppSettingRepository : Repository<AppSetting>, IAppSettingRepository
+public class AppSettingRepository : IAppSettingRepository
 {
-    public AppSettingRepository(AppDbContext context) : base(context)
+    private readonly AppDbContext _context;
+
+    public AppSettingRepository(AppDbContext context)
     {
+        _context = context;
     }
 
     public async Task<AppSetting?> GetByKeyAsync(string key, CancellationToken cancellationToken = default)
     {
-        return await DbSet.FirstOrDefaultAsync(x => x.Key == key, cancellationToken);
+        return await _context.AppSettings.FirstOrDefaultAsync(x => x.Key == key, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<AppSetting>> GetByCategoryAsync(string category, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AppSetting>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await DbSet
-            .AsNoTracking()
-            .Where(x => x.Category == category)
-            .OrderBy(x => x.Key)
-            .ToListAsync(cancellationToken);
+        return await _context.AppSettings.AsNoTracking().OrderBy(x => x.Key).ToListAsync(cancellationToken);
+    }
+
+    public async Task<AppSetting> AddAsync(AppSetting setting, CancellationToken cancellationToken = default)
+    {
+        await _context.AppSettings.AddAsync(setting, cancellationToken);
+        return setting;
+    }
+
+    public Task UpdateAsync(AppSetting setting, CancellationToken cancellationToken = default)
+    {
+        _context.AppSettings.Update(setting);
+        return Task.CompletedTask;
+    }
+
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return _context.SaveChangesAsync(cancellationToken);
     }
 }

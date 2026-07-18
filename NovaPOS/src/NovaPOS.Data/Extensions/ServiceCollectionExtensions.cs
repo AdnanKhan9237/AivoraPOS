@@ -22,12 +22,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<ISaleRepository, SaleRepository>();
-        services.AddScoped<IReturnRepository, ReturnRepository>();
+        services.AddScoped<IRefundRepository, RefundRepository>();
+        services.AddScoped<IInventoryMovementRepository, InventoryMovementRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IAppSettingRepository, AppSettingRepository>();
-        services.AddScoped<ILicenseRecordRepository, LicenseRecordRepository>();
+        services.AddScoped<ILicenseInfoRepository, LicenseInfoRepository>();
 
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
         services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();

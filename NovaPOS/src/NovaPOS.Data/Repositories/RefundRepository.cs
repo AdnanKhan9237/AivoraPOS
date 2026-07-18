@@ -4,23 +4,23 @@ using NovaPOS.Core.Interfaces.Repositories;
 
 namespace NovaPOS.Data.Repositories;
 
-public class ReturnRepository : Repository<Return>, IReturnRepository
+public class RefundRepository : Repository<Refund>, IRefundRepository
 {
-    public ReturnRepository(AppDbContext context) : base(context)
+    public RefundRepository(AppDbContext context) : base(context)
     {
     }
 
-    public async Task<Return?> GetWithDetailsAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Refund?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await DbSet
             .Include(x => x.OriginalSale)
             .Include(x => x.ProcessedBy)
             .Include(x => x.Items)
-            .ThenInclude(x => x.Product)
+            .ThenInclude(x => x.SaleItem)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Return>> GetBySaleIdAsync(int saleId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Refund>> GetBySaleIdAsync(Guid saleId, CancellationToken cancellationToken = default)
     {
         return await DbSet
             .AsNoTracking()
