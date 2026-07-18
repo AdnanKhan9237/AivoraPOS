@@ -1,0 +1,38 @@
+<UserControl x:Class="AivoraPOS.App.Views.Products.LowStockView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Margin="0,0,0,12">
+            <Button Content="Refresh" DockPanel.Dock="Right" Padding="12,6" Command="{Binding LoadCommand}" />
+            <TextBlock Text="Products at or below their low stock threshold"
+                       VerticalAlignment="Center"
+                       Foreground="#555" />
+        </DockPanel>
+
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Products}"
+                  SelectedItem="{Binding SelectedProduct}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="110" />
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="120" />
+                <DataGridTextColumn Header="Stock" Binding="{Binding StockQuantity}" Width="80" />
+                <DataGridTextColumn Header="Threshold" Binding="{Binding LowStockThreshold}" Width="90" />
+                <DataGridTextColumn Header="Price" Binding="{Binding SalePrice, StringFormat=C}" Width="90" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="12">
+            <Button Content="Restock Selected"
+                    Padding="14,8"
+                    Command="{Binding RestockCommand}" />
+        </StackPanel>
+    </Grid>
+</UserControl>
