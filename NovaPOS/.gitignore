@@ -1,0 +1,44 @@
+## Ignore Visual Studio / .NET build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Visual Studio
+.vs/
+*.rsuser
+
+## NuGet
+*.nupkg
+**/packages/*
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Rider
+.idea/
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Local database and secrets
+**/dbconfig.enc
+**/novapos.db
+**/novapos.db-*
+
+## WiX
+*.wixpdb
+*.msi
+
+## Test results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
