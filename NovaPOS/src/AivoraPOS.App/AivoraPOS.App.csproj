@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>AivoraPOS.App</RootNamespace>
+    <AssemblyName>AivoraPOS</AssemblyName>
+    <ApplicationIcon>Assets\aivorapos.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\logo.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\logo-icon.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\aivorapos.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc5.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AivoraPOS.Core\AivoraPOS.Core.csproj" />
+    <ProjectReference Include="..\AivoraPOS.Data\AivoraPOS.Data.csproj" />
+    <ProjectReference Include="..\AivoraPOS.Licensing\AivoraPOS.Licensing.csproj" />
+    <ProjectReference Include="..\AivoraPOS.Reporting\AivoraPOS.Reporting.csproj" />
+    <ProjectReference Include="..\AivoraPOS.Security\AivoraPOS.Security.csproj" />
+  </ItemGroup>
+
+  <Target Name="ConfuserExObfuscation"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and Exists('$(MSBuildThisFileDirectory)..\..\build\tools\ConfuserEx\Confuser.CLI.exe')">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\build\obfuscate.ps1&quot; -InputDir &quot;$(TargetDir.TrimEnd('\'))&quot;" />
+  </Target>
+
+  <Target Name="GenerateIntegrityChecksum"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and '$(OS)' == 'Windows_NT'">
+    <Exec Command="powershell -NoProfile -Command &quot;if (Test-Path '$(TargetPath)') { (Get-FileHash '$(TargetPath)' -Algorithm SHA256).Hash | Set-Content -Path '$(TargetDir)$(AssemblyName).sha256' }&quot;"
+          IgnoreExitCode="true" />
+  </Target>
+
+</Project>

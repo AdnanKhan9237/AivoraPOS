@@ -1,0 +1,87 @@
+<Window x:Class="AivoraPOS.App.Views.Products.ProductEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Product"
+        Height="620"
+        Width="520"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+    <ScrollViewer Margin="24" VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <TextBlock Text="{Binding IsEditMode, Converter={StaticResource EditModeTitleConverter}}"
+                       FontSize="20"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,16" />
+
+            <TextBlock Text="Product Name *" />
+            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,12" />
+
+            <TextBlock Text="SKU *" />
+            <DockPanel Margin="0,4,0,12">
+                <Button Content="Generate" DockPanel.Dock="Right" Width="90" Margin="8,0,0,0"
+                        Command="{Binding GenerateSkuCommand}" />
+                <TextBox Text="{Binding Sku, UpdateSourceTrigger=PropertyChanged}" Height="32" />
+            </DockPanel>
+
+            <TextBlock Text="Barcode" />
+            <TextBox Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,12" />
+
+            <TextBlock Text="Category *" />
+            <DockPanel Margin="0,4,0,12">
+                <TextBlock DockPanel.Dock="Right" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <Hyperlink Command="{Binding AddCategoryCommand}">Add new category</Hyperlink>
+                </TextBlock>
+                <ComboBox ItemsSource="{Binding Categories}"
+                          SelectedValue="{Binding SelectedCategoryId}"
+                          SelectedValuePath="Id"
+                          DisplayMemberPath="Name"
+                          Height="32" />
+            </DockPanel>
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,8,0">
+                    <TextBlock Text="Purchase Price" />
+                    <TextBox Text="{Binding PurchasePrice, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                    <TextBlock Text="Sale Price" />
+                    <TextBox Text="{Binding SalePrice, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,0" />
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="{Binding PriceWarning}" Foreground="#E65100" Margin="0,0,0,12"
+                       Visibility="{Binding PriceWarning, Converter={StaticResource NullToVisibilityConverter}}" />
+
+            <TextBlock Text="Tax Rate (%)" />
+            <TextBox Text="{Binding TaxRatePercent, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,12" />
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,8,0">
+                    <TextBlock Text="Stock Quantity" />
+                    <TextBox Text="{Binding StockQuantity, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                    <TextBlock Text="Low Stock Threshold" />
+                    <TextBox Text="{Binding LowStockThreshold, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,0" />
+                </StackPanel>
+            </Grid>
+
+            <CheckBox Content="Active" IsChecked="{Binding IsActive}" Margin="0,0,0,16" />
+
+            <TextBlock Text="{Binding ValidationMessage}" Foreground="#C62828" Margin="0,0,0,12" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancel" Width="90" Margin="0,0,8,0" Command="{Binding CancelCommand}" />
+                <Button Content="Save" Width="90" IsDefault="True" Command="{Binding SaveCommand}" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Window>
