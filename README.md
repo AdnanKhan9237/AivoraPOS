@@ -1,1 +1,1 @@
-# NovaPOS
+# AivoraPOS
