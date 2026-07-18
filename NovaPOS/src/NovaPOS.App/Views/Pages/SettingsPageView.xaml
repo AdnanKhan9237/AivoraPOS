@@ -149,6 +149,12 @@
             </TabItem>
         </TabControl>
 
-        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Margin="0,12,0,0" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Text="{Binding AppVersionText}"
+                       HorizontalAlignment="Right"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       FontSize="11" />
+        </Grid>
     </Grid>
 </UserControl>

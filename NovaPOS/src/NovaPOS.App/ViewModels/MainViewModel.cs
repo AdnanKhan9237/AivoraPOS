@@ -3,10 +3,10 @@ using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NovaPOS.App.Services;
 using NovaPOS.App.ViewModels.Products;
 using NovaPOS.App.ViewModels.Reports;
 using NovaPOS.App.ViewModels.Sales;
-using NovaPOS.App.ViewModels.Settings;
 using NovaPOS.App.ViewModels.Settings;
 using NovaPOS.App.ViewModels.Shell;
 using NovaPOS.App.ViewModels.Users;
@@ -30,6 +30,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ISettingsService _settingsService;
     private readonly ISessionTimeoutService _sessionTimeoutService;
     private readonly IAuthService _authService;
+    private readonly UpdateCoordinator _updateCoordinator;
     private readonly ReportsViewModel _reportsViewModel;
     private readonly DispatcherTimer _statusTimer;
 
@@ -43,6 +44,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ISettingsService settingsService,
         ISessionTimeoutService sessionTimeoutService,
         IAuthService authService,
+        UpdateCoordinator updateCoordinator,
         IUserRepository userRepository,
         ReportsViewModel reportsViewModel,
         LockOverlayViewModel lockOverlayViewModel)
@@ -56,6 +58,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _settingsService = settingsService;
         _sessionTimeoutService = sessionTimeoutService;
         _authService = authService;
+        _updateCoordinator = updateCoordinator;
         _reportsViewModel = reportsViewModel;
         LockOverlay = lockOverlayViewModel;
         LockOverlay.Unlocked += OnUnlocked;
@@ -119,7 +122,46 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _showLowStockStatus;
 
     [ObservableProperty]
+    private bool _showUpdateBanner;
+
+    [ObservableProperty]
+    private string _updateBannerText = string.Empty;
+
+    [ObservableProperty]
     private bool _isLocked;
+
+    public void ApplyUpdateState(UpdateCoordinator? updateCoordinator = null)
+    {
+        var coordinator = updateCoordinator ?? _updateCoordinator;
+        ShowUpdateBanner = coordinator.HasUpdate;
+        UpdateBannerText = coordinator.BannerText;
+    }
+
+    [RelayCommand]
+    private async Task InstallUpdateAsync()
+    {
+        try
+        {
+            await _updateCoordinator.InstallAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                "The update could not be downloaded. Please check your internet connection and try again later.",
+                "Update Failed",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            Serilog.Log.Warning(ex, "Update installation failed.");
+        }
+    }
+
+    [RelayCommand]
+    private void DismissUpdate()
+    {
+        _updateCoordinator.Dismiss();
+        ShowUpdateBanner = false;
+        UpdateBannerText = string.Empty;
+    }
 
     public event Action? OnActivateLicenseRequested;
 

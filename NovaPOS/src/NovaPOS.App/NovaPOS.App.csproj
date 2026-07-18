@@ -8,7 +8,12 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>NovaPOS.App</RootNamespace>
     <AssemblyName>NovaPOS</AssemblyName>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\app.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
@@ -32,12 +37,12 @@
   <Target Name="ConfuserExObfuscation"
           AfterTargets="Build"
           Condition="'$(Configuration)' == 'Release' and Exists('$(MSBuildThisFileDirectory)..\..\build\tools\ConfuserEx\Confuser.CLI.exe')">
-    <Exec Command="&quot;$(MSBuildThisFileDirectory)..\..\build\tools\ConfuserEx\Confuser.CLI.exe&quot; &quot;$(MSBuildThisFileDirectory)..\..\build\confuser.crproj&quot;" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\build\obfuscate.ps1&quot; -InputDir &quot;$(TargetDir.TrimEnd('\'))&quot;" />
   </Target>
 
   <Target Name="GenerateIntegrityChecksum"
           AfterTargets="Build"
-          Condition="'$(Configuration)' == 'Release'">
+          Condition="'$(Configuration)' == 'Release' and '$(OS)' == 'Windows_NT'">
     <Exec Command="powershell -NoProfile -Command &quot;if (Test-Path '$(TargetPath)') { (Get-FileHash '$(TargetPath)' -Algorithm SHA256).Hash | Set-Content -Path '$(TargetDir)$(AssemblyName).sha256' }&quot;"
           IgnoreExitCode="true" />
   </Target>

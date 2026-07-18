@@ -1,15 +1,169 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
   <Package Name="NovaPOS"
-           Manufacturer="NovaPOS"
-           Version="1.0.0.0"
+           Manufacturer="$(var.Manufacturer)"
+           Version="$(var.ProductVersion)"
            UpgradeCode="6f3f8f0a-2f0a-4c2f-9a2f-0f6a9a2f0a2f"
            Scope="perMachine">
-    <MajorUpgrade DowngradeErrorMessage="A newer version of NovaPOS is already installed." />
-    <MediaTemplate EmbedCab="yes" />
 
-    <Feature Id="MainFeature" Title="NovaPOS" Level="1">
+    <SummaryInformation Description="NovaPOS Point of Sale"
+                        Manufacturer="$(var.Manufacturer)" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of NovaPOS is already installed."
+                  AllowSameVersionUpgrades="yes" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="AppIcon" SourceFile="assets\NovaPOS.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://support.novapos.com" />
+    <Property Id="ARPHELPLINK" Value="https://support.novapos.com" />
+    <Property Id="ARPCONTACT" Value="support@novapos.com" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="INSTALLDESKTOPSHORTCUT" Value="1" />
+    <Property Id="DELETEUSERDATA" Value="0" />
+
+    <Property Id="DOTNETDESKTOP8INSTALLED">
+      <RegistrySearch Id="DotNetDesktop8Search"
+                      Root="HKLM"
+                      Key="SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App"
+                      Name="8.0.0"
+                      Type="raw" />
+    </Property>
+
+    <Property Id="VCREDISTINSTALLED">
+      <RegistrySearch Id="VcRedistSearch"
+                      Root="HKLM"
+                      Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+                      Name="Installed"
+                      Type="integer" />
+    </Property>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="NovaPOS" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="NovaPOS" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="CommonAppDataNovaPOSFolder" Name="NovaPOS" />
+    </StandardDirectory>
+
+    <ComponentGroup Id="AppComponents" Directory="INSTALLFOLDER">
+      <Files Include="$(var.PublishDir)\**\*.*" />
+    </ComponentGroup>
+
+    <Component Id="StartMenuShortcut" Directory="ApplicationProgramsFolder" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
+      <Shortcut Id="StartMenuShortcut"
+                Name="NovaPOS"
+                Description="NovaPOS Point of Sale"
+                Target="[INSTALLFOLDER]NovaPOS.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
+      <RegistryValue Root="HKCU"
+                     Key="Software\NovaPOS"
+                     Name="installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+
+    <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="B2C3D4E5-F6A7-8901-BCDE-F12345678901">
+      <Condition>INSTALLDESKTOPSHORTCUT</Condition>
+      <Shortcut Id="DesktopShortcut"
+                Name="NovaPOS"
+                Description="NovaPOS Point of Sale"
+                Target="[INSTALLFOLDER]NovaPOS.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
+      <RegistryValue Root="HKCU"
+                     Key="Software\NovaPOS"
+                     Name="desktop"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+
+    <Component Id="AppDataPermissions" Directory="CommonAppDataNovaPOSFolder" Guid="C3D4E5F6-A7B8-9012-CDEF-123456789012">
+      <CreateFolder>
+        <util:Permission User="Users" GenericAll="yes" />
+      </CreateFolder>
+      <RegistryValue Root="HKLM"
+                     Key="Software\NovaPOS"
+                     Name="appdata"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+
+    <Feature Id="MainFeature" Title="NovaPOS" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER">
       <ComponentGroupRef Id="AppComponents" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="AppDataPermissions" />
+      <Feature Id="DesktopShortcutFeature" Title="Desktop shortcut" Level="1">
+        <ComponentRef Id="DesktopShortcut" />
+      </Feature>
     </Feature>
+
+    <CustomAction Id="InstallDotNetDesktop8"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="powershell.exe -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; { $p = Join-Path $env:TEMP 'dotnet-desktop-runtime.exe'; Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.11/windowsdesktop-runtime-8.0.11-win-x64.exe' -OutFile $p; Start-Process -FilePath $p -ArgumentList '/install','/quiet','/norestart' -Wait }&quot;"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <CustomAction Id="InstallVcRedist"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="powershell.exe -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; { $p = Join-Path $env:TEMP 'vc_redist.x64.exe'; Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vc_redist.x64.exe' -OutFile $p; Start-Process -FilePath $p -ArgumentList '/install','/quiet','/norestart' -Wait }&quot;"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <CustomAction Id="RemoveUserData"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="powershell.exe -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; { if ('[DELETEUSERDATA]' -eq '1') { $d = Join-Path $env:APPDATA 'NovaPOS'; if (Test-Path $d) { Remove-Item -LiteralPath $d -Recurse -Force } } }&quot;"
+                  Execute="deferred"
+                  Impersonate="yes"
+                  Return="ignore" />
+
+    <CustomAction Id="SetDeleteUserData" Property="DELETEUSERDATA" Value="1" />
+    <CustomAction Id="ClearDeleteUserData" Property="DELETEUSERDATA" Value="0" />
+
+    <InstallExecuteSequence>
+      <Custom Action="InstallDotNetDesktop8" Before="InstallFiles" Condition="NOT Installed AND NOT DOTNETDESKTOP8INSTALLED" />
+      <Custom Action="InstallVcRedist" After="InstallDotNetDesktop8" Condition="NOT Installed AND VCREDISTINSTALLED &lt;&gt; 1" />
+      <Custom Action="RemoveUserData" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot; AND DELETEUSERDATA=&quot;1&quot;" />
+    </InstallExecuteSequence>
+
+    <UI>
+      <ui:WixUI Id="WixUI_InstallDir" />
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Remove" Event="NewDialog" Value="NovaPOSRemoveDlg" Order="2" />
+      <Publish Dialog="NovaPOSRemoveDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg" Order="2" />
+      <Publish Dialog="NovaPOSRemoveDlg" Control="YesRemoveData" Event="DoAction" Value="SetDeleteUserData" Order="1" />
+      <Publish Dialog="NovaPOSRemoveDlg" Control="YesRemoveData" Event="NewDialog" Value="VerifyReadyDlg" Order="2" />
+      <Publish Dialog="NovaPOSRemoveDlg" Control="NoKeepData" Event="DoAction" Value="ClearDeleteUserData" Order="1" />
+      <Publish Dialog="NovaPOSRemoveDlg" Control="NoKeepData" Event="NewDialog" Value="VerifyReadyDlg" Order="2" />
+    </UI>
+
+    <Fragment>
+      <UI>
+        <Dialog Id="NovaPOSRemoveDlg" Width="370" Height="170" Title="Remove NovaPOS">
+          <Control Id="Title" Type="Text" X="15" Y="15" Width="340" Height="30" Text="{\WixUI_Font_Title}Delete business data?" />
+          <Control Id="Description" Type="Text" X="20" Y="45" Width="330" Height="40"
+                   Text="Application files will be removed. Choose whether to also delete your database and settings in %APPDATA%\NovaPOS." />
+          <Control Id="Question" Type="Text" X="20" Y="90" Width="330" Height="20" Text="Delete your business data too?" />
+          <Control Id="YesRemoveData" Type="PushButton" X="20" Y="125" Width="110" Height="17" Default="yes" Text="Yes, delete all" />
+          <Control Id="NoKeepData" Type="PushButton" X="140" Y="125" Width="110" Height="17" Text="No, keep data" />
+          <Control Id="Back" Type="PushButton" X="270" Y="125" Width="80" Height="17" Text="Back" />
+        </Dialog>
+      </UI>
+    </Fragment>
+
   </Package>
 </Wix>

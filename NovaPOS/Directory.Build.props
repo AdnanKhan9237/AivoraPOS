@@ -5,5 +5,16 @@
     <LangVersion>12</LangVersion>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+
+    <!-- Semantic versioning: MAJOR.MINOR.PATCH -->
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0</InformationalVersion>
+
+    <Company>NovaPOS</Company>
+    <Product>NovaPOS</Product>
+    <Copyright>Copyright © NovaPOS</Copyright>
+    <Description>Professional point-of-sale for retail businesses</Description>
   </PropertyGroup>
 </Project>

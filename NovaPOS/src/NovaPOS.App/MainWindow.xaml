@@ -41,6 +41,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -75,8 +76,29 @@
             </Grid>
         </Border>
 
-        <!-- License banner -->
+        <!-- Update banner -->
         <Border Grid.Row="1"
+                Background="{DynamicResource AccentBrush}"
+                Padding="12,6"
+                Visibility="{Binding ShowUpdateBanner, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <DockPanel>
+                <Button Content="Dismiss"
+                        DockPanel.Dock="Right"
+                        Padding="10,2"
+                        Margin="8,0,0,0"
+                        Command="{Binding DismissUpdateCommand}" />
+                <Button Content="Update Now"
+                        DockPanel.Dock="Right"
+                        Padding="10,2"
+                        Command="{Binding InstallUpdateCommand}" />
+                <TextBlock Text="{Binding UpdateBannerText}"
+                           Foreground="{DynamicResource AccentForegroundBrush}"
+                           VerticalAlignment="Center" />
+            </DockPanel>
+        </Border>
+
+        <!-- License banner -->
+        <Border Grid.Row="2"
                 Background="{DynamicResource TrialBannerBrush}"
                 Padding="12,6"
                 Visibility="{Binding ShowLicenseBanner, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -92,7 +114,7 @@
         </Border>
 
         <!-- Body: nav + content -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200" />
                 <ColumnDefinition Width="*" />
@@ -152,7 +174,7 @@
         </Grid>
 
         <!-- Status bar -->
-        <Border Grid.Row="3"
+        <Border Grid.Row="4"
                 Background="{DynamicResource StatusBarBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"

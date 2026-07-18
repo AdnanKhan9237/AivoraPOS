@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project baseDir="." outputDir="." xmlns="http://confuser.codeplex.com">
+  <rule pattern="true" inherit="false">
+    <protection id="rename">
+      <argument name="renPublic" value="false" />
+    </protection>
+    <protection id="constants" />
+    <protection id="ctrl flow" />
+  </rule>
+
+  <!-- Do not obfuscate EF Core migrations -->
+  <rule pattern="namespace('NovaPOS.Data.Migrations')" preset="none" inherit="false" />
+
+  <!-- Preserve public licensing API surface -->
+  <rule pattern="namespace('NovaPOS.Licensing')" preset="none" inherit="false" />
+
+  <module path="NovaPOS.exe">
+    <!-- Resource strings and XAML BAML remain in embedded resources -->
+    <rule pattern="namespace('NovaPOS.App')" inherit="true" />
+    <rule pattern="namespace('NovaPOS.Data')" inherit="true" />
+    <rule pattern="namespace('NovaPOS.Security')" inherit="true" />
+    <rule pattern="namespace('NovaPOS.Reporting')" inherit="true" />
+    <rule pattern="namespace('NovaPOS.Core')" inherit="true" />
+  </module>
+</project>

@@ -15,7 +15,6 @@ using NovaPOS.App.ViewModels.Users;
 using NovaPOS.App.Views;
 using NovaPOS.App.Views.Login;
 using NovaPOS.Core.Constants;
-using NovaPOS.Core.Constants;
 using NovaPOS.Core.Entities;
 using NovaPOS.Core.Enums;
 using NovaPOS.Core.Interfaces.Licensing;
@@ -121,8 +120,12 @@ public partial class App : Application
                 await ShowTrialNoticeAsync(licenseResult);
             }
 
-            // 5–6. Login then main window
-            await RunApplicationSessionAsync();
+            // 5. Check for updates (non-blocking, fails silently offline)
+            var updateCoordinator = _host.Services.GetRequiredService<UpdateCoordinator>();
+            await updateCoordinator.CheckAsync();
+
+            // 6–7. Login then main window
+            await RunApplicationSessionAsync(updateCoordinator);
         }
         catch (Exception ex)
         {
@@ -141,6 +144,9 @@ public partial class App : Application
 
         services.AddScoped<IThemeService, ThemeService>();
         services.AddScoped<INavigationService, NavigationService>();
+        services.AddSingleton<IUpdateService, UpdateService>();
+        services.AddSingleton<ICrashReportingService, CrashReportingService>();
+        services.AddSingleton<UpdateCoordinator>();
 
         services.AddSingleton<ApplicationSessionCoordinator>();
         services.AddSingleton<MainWindow>();
@@ -157,7 +163,7 @@ public partial class App : Application
 
     private IServiceScope CreateScope() => _host!.Services.CreateScope();
 
-    private async Task RunApplicationSessionAsync()
+    private async Task RunApplicationSessionAsync(UpdateCoordinator? updateCoordinator)
     {
         var user = await ShowLoginWindowAsync();
         if (user is null)
@@ -173,6 +179,7 @@ public partial class App : Application
         sessionTimeout.SessionTimedOut += OnSessionTimedOut;
 
         var mainViewModel = _sessionScope.ServiceProvider.GetRequiredService<MainViewModel>();
+        mainViewModel.ApplyUpdateState(updateCoordinator);
         mainViewModel.OnActivateLicenseRequested += OnActivateLicenseRequested;
         mainViewModel.RefreshLicenseStatus();
         mainViewModel.RefreshUserStatus();
@@ -387,6 +394,7 @@ public partial class App : Application
     private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         Log.Error(e.Exception, "Unhandled UI exception.");
+        _ = ReportCrashAsync(e.Exception, "UI");
         ShowFriendlyError("Something went wrong. The action could not be completed, but NovaPOS will keep running.");
         e.Handled = true;
     }
@@ -396,6 +404,7 @@ public partial class App : Application
         if (e.ExceptionObject is Exception ex)
         {
             Log.Fatal(ex, "Unhandled domain exception.");
+            _ = ReportCrashAsync(ex, "Domain");
             Dispatcher.Invoke(() => ShowFriendlyError("Something went wrong. NovaPOS encountered a critical error."));
         }
     }
@@ -403,8 +412,28 @@ public partial class App : Application
     private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         Log.Error(e.Exception, "Unobserved task exception.");
+        _ = ReportCrashAsync(e.Exception, "Task");
         Dispatcher.Invoke(() => ShowFriendlyError("Something went wrong while completing a background task."));
         e.SetObserved();
+    }
+
+    private async Task ReportCrashAsync(Exception exception, string source)
+    {
+        if (_host is null)
+        {
+            return;
+        }
+
+        try
+        {
+            using var scope = _host.Services.CreateScope();
+            var crashReporting = scope.ServiceProvider.GetRequiredService<ICrashReportingService>();
+            await crashReporting.PromptAndReportAsync(exception, source);
+        }
+        catch (Exception reportEx)
+        {
+            Log.Warning(reportEx, "Crash reporting failed.");
+        }
     }
 
     private static void ShowFriendlyError(string message)

@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using NovaPOS.App.Views.Settings;
+using NovaPOS.Core;
 using NovaPOS.Core.Constants;
 using NovaPOS.Core.Enums;
 using NovaPOS.Core.Interfaces.Licensing;
@@ -50,6 +51,8 @@ public partial class SettingsViewModel : ObservableObject
         CanManageData = _authorizationService.HasPermission(Permission.ManageSettings);
         CanExportData = _licenseService.CanUse(LicenseFeature.ExportPdfExcel);
 
+        AppVersionText = $"NovaPOS v{AppVersion.Current} • {ProductInfo.CompanyName}";
+
         CurrencyPositions = [CurrencyPosition.Before, CurrencyPosition.After];
         ReceiptWidths = [ReceiptWidth.Mm58, ReceiptWidth.Mm80, ReceiptWidth.A4];
         PaymentMethods = [PaymentMethod.Cash, PaymentMethod.Card, PaymentMethod.Mixed];
@@ -62,6 +65,7 @@ public partial class SettingsViewModel : ObservableObject
     public bool CanManageUsers { get; }
     public bool CanManageData { get; }
     public bool CanExportData { get; }
+    public string AppVersionText { get; }
 
     public IReadOnlyList<CurrencyPosition> CurrencyPositions { get; }
     public IReadOnlyList<ReceiptWidth> ReceiptWidths { get; }
