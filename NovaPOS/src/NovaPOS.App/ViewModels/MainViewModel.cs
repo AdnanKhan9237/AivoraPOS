@@ -4,9 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 using NovaPOS.Core.Enums;
 using NovaPOS.App.ViewModels.Sales;
 using NovaPOS.App.ViewModels.Reports;
+using NovaPOS.App.ViewModels.Products;
 using NovaPOS.Core.Interfaces.Licensing;
 using NovaPOS.Core.Interfaces.Repositories;
 using NovaPOS.Core.Interfaces.Security;
+using NovaPOS.Core.Interfaces.Services;
 
 namespace NovaPOS.App.ViewModels;
 
@@ -15,6 +17,7 @@ public partial class MainViewModel : ObservableObject
     private readonly ILicenseService _licenseService;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IInventoryAlertService _inventoryAlertService;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly Action<AuditLogViewModel> _showAuditLog;
     private readonly Action _requestLockScreen;
@@ -23,6 +26,7 @@ public partial class MainViewModel : ObservableObject
         ILicenseService licenseService,
         ICurrentUserService currentUserService,
         IAuthorizationService authorizationService,
+        IInventoryAlertService inventoryAlertService,
         IServiceScopeFactory scopeFactory,
         SalesViewModel salesViewModel,
         Action<AuditLogViewModel> showAuditLog,
@@ -31,13 +35,17 @@ public partial class MainViewModel : ObservableObject
         _licenseService = licenseService;
         _currentUserService = currentUserService;
         _authorizationService = authorizationService;
+        _inventoryAlertService = inventoryAlertService;
         _scopeFactory = scopeFactory;
         Sales = salesViewModel;
         _showAuditLog = showAuditLog;
         _requestLockScreen = requestLockScreen;
+
+        _inventoryAlertService.LowStockCountChanged += (_, _) => UpdateInventoryBadge();
         RefreshLicenseStatus();
         RefreshUserStatus();
         _currentUserService.CurrentUserChanged += (_, _) => RefreshUserStatus();
+        _ = RefreshInventoryAlertsAsync();
     }
 
     [ObservableProperty]
@@ -59,6 +67,27 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _canViewReports;
+
+    [ObservableProperty]
+    private bool _canManageProducts;
+
+    [ObservableProperty]
+    private string _inventoryBadgeText = string.Empty;
+
+    [ObservableProperty]
+    private bool _showInventoryBadge;
+
+    public async Task RefreshInventoryAlertsAsync()
+    {
+        await _inventoryAlertService.RefreshAsync();
+        UpdateInventoryBadge();
+    }
+
+    private void UpdateInventoryBadge()
+    {
+        ShowInventoryBadge = _inventoryAlertService.LowStockCount > 0 && CanManageProducts;
+        InventoryBadgeText = ShowInventoryBadge ? _inventoryAlertService.LowStockCount.ToString() : string.Empty;
+    }
 
     public void RefreshLicenseStatus()
     {
@@ -82,6 +111,24 @@ public partial class MainViewModel : ObservableObject
 
         CanViewAuditLog = _authorizationService.HasPermission(Permission.ViewAuditLog);
         CanViewReports = _authorizationService.HasPermission(Permission.ViewReports);
+        CanManageProducts = _authorizationService.HasPermission(Permission.ManageProducts);
+        UpdateInventoryBadge();
+    }
+
+    [RelayCommand]
+    private void OpenProducts()
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var vm = scope.ServiceProvider.GetRequiredService<ProductsViewModel>();
+
+        if (!Behaviors.AuthorizationBehavior.CanNavigateTo(vm, _authorizationService))
+        {
+            return;
+        }
+
+        var window = new Views.Products.ProductsWindow { DataContext = vm, Owner = System.Windows.Application.Current.MainWindow };
+        window.ShowDialog();
+        _ = RefreshInventoryAlertsAsync();
     }
 
     [RelayCommand]

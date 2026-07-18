@@ -32,6 +32,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
         services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
         services.AddScoped<ISaleService, SaleService>();
+        services.AddScoped<IInventoryAlertService, InventoryAlertService>();
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IProductImportService, ProductImportService>();
 
         return services;
     }

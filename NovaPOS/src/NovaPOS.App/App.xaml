@@ -4,5 +4,8 @@
     <Application.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" xmlns:converters="clr-namespace:NovaPOS.App.Converters" />
+        <converters:StockLevelToBrushConverter x:Key="StockLevelToBrushConverter" xmlns:converters="clr-namespace:NovaPOS.App.Converters" />
+        <converters:EditModeTitleConverter x:Key="EditModeTitleConverter" xmlns:converters="clr-namespace:NovaPOS.App.Converters" />
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" xmlns:converters="clr-namespace:NovaPOS.App.Converters" />
     </Application.Resources>
 </Application>

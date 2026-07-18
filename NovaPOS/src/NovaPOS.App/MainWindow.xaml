@@ -20,6 +20,23 @@
         <Border Grid.Row="0" Background="#1F4E79" Padding="12,8">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Padding="12,4" Margin="0,0,8,0"
+                            Visibility="{Binding CanManageProducts, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Command="{Binding OpenProductsCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Inventory" VerticalAlignment="Center" />
+                            <Border Background="#C62828"
+                                    CornerRadius="8"
+                                    Padding="6,1"
+                                    Margin="8,0,0,0"
+                                    Visibility="{Binding ShowInventoryBadge, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Text="{Binding InventoryBadgeText}"
+                                           Foreground="White"
+                                           FontSize="11"
+                                           FontWeight="Bold" />
+                            </Border>
+                        </StackPanel>
+                    </Button>
                     <Button Content="Reports"
                             Padding="12,4"
                             Margin="0,0,8,0"

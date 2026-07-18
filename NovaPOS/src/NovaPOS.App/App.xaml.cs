@@ -6,6 +6,7 @@ using NovaPOS.App.Logging;
 using NovaPOS.App.ViewModels;
 using NovaPOS.App.ViewModels.Reports;
 using NovaPOS.App.ViewModels.Sales;
+using NovaPOS.App.ViewModels.Products;
 using NovaPOS.App.Views;
 using NovaPOS.Core.Constants;
 using NovaPOS.Core.Entities;
@@ -135,6 +136,7 @@ public partial class App : Application
         services.AddSingleton<MainWindow>();
         services.AddScoped<SalesViewModel>();
         services.AddScoped<ReportsViewModel>();
+        services.AddScoped<ProductsViewModel>();
         services.AddScoped<MainViewModel>(sp =>
         {
             var coordinator = sp.GetRequiredService<ApplicationSessionCoordinator>();
@@ -142,6 +144,7 @@ public partial class App : Application
                 sp.GetRequiredService<ILicenseService>(),
                 sp.GetRequiredService<ICurrentUserService>(),
                 sp.GetRequiredService<IAuthorizationService>(),
+                sp.GetRequiredService<IInventoryAlertService>(),
                 sp.GetRequiredService<IServiceScopeFactory>(),
                 sp.GetRequiredService<SalesViewModel>(),
                 vm =>
@@ -176,6 +179,7 @@ public partial class App : Application
             mainViewModel.RefreshLicenseStatus();
             mainViewModel.RefreshUserStatus();
             mainViewModel.OnActivateLicenseRequested += OnActivateLicenseRequested;
+            await mainViewModel.RefreshInventoryAlertsAsync();
 
             _mainWindow.DataContext = mainViewModel;
             _mainWindow.Show();

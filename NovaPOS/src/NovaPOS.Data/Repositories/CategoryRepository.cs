@@ -18,4 +18,20 @@ public class CategoryRepository : Repository<Category>, ICategoryRepository
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Category>> GetAllOrderedAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AsNoTracking()
+            .OrderBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Category?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var normalized = name.Trim();
+        return await DbSet
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Name == normalized, cancellationToken);
+    }
 }
