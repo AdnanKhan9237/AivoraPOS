@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project baseDir="." outputDir="." xmlns="http://confuser.codeplex.com">
-  <rule pattern="true" preset="normal" />
-  <module path="NovaPOS.dll" />
+  <rule pattern="true" preset="normal" inherit="false">
+    <protection id="rename">
+      <argument name="renPublic" value="false" />
+    </protection>
+    <protection id="constants" />
+    <protection id="ctrl flow" />
+  </rule>
+  <rule pattern="namespace('AivoraPOS.Data.Migrations')" preset="none" inherit="false" />
+  <module path="AivoraPOS.dll" />
 </project>

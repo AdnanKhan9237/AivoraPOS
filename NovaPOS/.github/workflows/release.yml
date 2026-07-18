@@ -1,0 +1,142 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Extract version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $version = $tag.TrimStart('v')
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Restore NuGet packages
+        run: dotnet restore AivoraPOS.sln
+
+      - name: Build solution (Release)
+        run: dotnet build AivoraPOS.sln -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Run unit tests
+        run: dotnet test AivoraPOS.sln -c Release --no-build --verbosity normal
+
+      - name: Publish AivoraPOS.App (self-contained single-file)
+        run: >
+          dotnet publish src/AivoraPOS.App/AivoraPOS.App.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:Version=${{ steps.version.outputs.version }}
+          -o artifacts/publish
+
+      - name: Download ConfuserEx
+        shell: pwsh
+        run: |
+          $toolsDir = 'build/tools/ConfuserEx'
+          if (-not (Test-Path "$toolsDir/Confuser.CLI.exe")) {
+            New-Item -ItemType Directory -Force -Path $toolsDir | Out-Null
+            $zip = 'artifacts/confuserex.zip'
+            Invoke-WebRequest -Uri 'https://github.com/mkaring/ConfuserEx/releases/download/v1.6.0/ConfuserEx-CLI.zip' -OutFile $zip
+            Expand-Archive -Path $zip -DestinationPath $toolsDir -Force
+          }
+
+      - name: Obfuscate published executable
+        shell: pwsh
+        run: ./build/obfuscate.ps1 -InputDir artifacts/publish
+
+      - name: Install WiX Toolset
+        run: dotnet tool install --global wix --version 4.0.6
+
+      - name: Build MSI installer
+        shell: pwsh
+        run: |
+          $env:Path += ';' + [Environment]::GetFolderPath('UserProfile') + '\.dotnet\tools'
+          dotnet build installer/AivoraPOS.Setup/AivoraPOS.Setup.wixproj -c Release -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Collect release artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/release | Out-Null
+          Copy-Item artifacts/publish/AivoraPOS.exe artifacts/release/
+          $msi = Get-ChildItem installer/AivoraPOS.Setup/bin/Release/*.msi | Select-Object -First 1
+          Copy-Item $msi.FullName "artifacts/release/AivoraPOS-${{ steps.version.outputs.version }}.msi"
+
+      - name: Code sign artifacts
+        shell: pwsh
+        env:
+          CODESIGN_CERT_PATH: ${{ secrets.CODESIGN_CERT_PATH }}
+          CODESIGN_CERT_PASSWORD: ${{ secrets.CODESIGN_CERT_PASSWORD }}
+        run: |
+          if ($env:CODESIGN_CERT_PATH -and (Test-Path $env:CODESIGN_CERT_PATH)) {
+            ./build/sign.ps1 -Files @(
+              'artifacts/release/AivoraPOS.exe',
+              "artifacts/release/AivoraPOS-${{ steps.version.outputs.version }}.msi"
+            )
+          } else {
+            Write-Host 'Code signing skipped — configure CODESIGN_CERT_PATH and CODESIGN_CERT_PASSWORD secrets.'
+          }
+
+      - name: Generate version.json
+        shell: pwsh
+        run: |
+          $msiName = "AivoraPOS-${{ steps.version.outputs.version }}.msi"
+          $manifest = @{
+            version = '${{ steps.version.outputs.version }}'
+            url = "https://updates.mycompany.com/aivorapos/$msiName"
+            releaseNotes = "AivoraPOS ${{ steps.version.outputs.version }}"
+          } | ConvertTo-Json
+          Set-Content -Path artifacts/release/version.json -Value $manifest
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: AivoraPOS ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/release/AivoraPOS-${{ steps.version.outputs.version }}.msi
+            artifacts/release/AivoraPOS.exe
+            artifacts/release/version.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload version.json to update server
+        shell: pwsh
+        env:
+          UPDATE_SERVER_URL: ${{ secrets.UPDATE_SERVER_UPLOAD_URL }}
+          UPDATE_SERVER_TOKEN: ${{ secrets.UPDATE_SERVER_TOKEN }}
+        run: |
+          if ($env:UPDATE_SERVER_URL) {
+            $headers = @{ Authorization = "Bearer $env:UPDATE_SERVER_TOKEN" }
+            Invoke-RestMethod -Uri $env:UPDATE_SERVER_URL -Method Put -InFile artifacts/release/version.json -Headers $headers -ContentType 'application/json'
+            Write-Host 'version.json uploaded to update server.'
+          } else {
+            Write-Host 'UPDATE_SERVER_UPLOAD_URL not configured — skipping remote upload.'
+          }
