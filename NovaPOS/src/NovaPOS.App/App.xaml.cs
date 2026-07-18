@@ -15,6 +15,7 @@ using NovaPOS.App.ViewModels.Users;
 using NovaPOS.App.Views;
 using NovaPOS.App.Views.Login;
 using NovaPOS.Core.Constants;
+using NovaPOS.Core.Constants;
 using NovaPOS.Core.Entities;
 using NovaPOS.Core.Enums;
 using NovaPOS.Core.Interfaces.Licensing;
@@ -354,11 +355,18 @@ public partial class App : Application
     private static async Task ConfigureSessionTimeoutAsync(IServiceProvider services)
     {
         var appSettingRepository = services.GetRequiredService<IAppSettingRepository>();
+        var settingsService = services.GetRequiredService<ISettingsService>();
         var sessionTimeout = services.GetRequiredService<ISessionTimeoutService>();
-        var setting = await appSettingRepository.GetByKeyAsync("Session.IdleTimeoutMinutes");
-        if (setting is not null && int.TryParse(setting.Value, out var minutes) && minutes > 0)
+        await settingsService.InvalidateCacheAsync();
+        await settingsService.GetPosBehaviorAsync();
+        var minutes = settingsService.Get(SettingKeys.IdleTimeoutMinutes, 5);
+        if (minutes > 0)
         {
             sessionTimeout.IdleTimeout = TimeSpan.FromMinutes(minutes);
+        }
+        else
+        {
+            sessionTimeout.IdleTimeout = TimeSpan.FromDays(365);
         }
     }
 

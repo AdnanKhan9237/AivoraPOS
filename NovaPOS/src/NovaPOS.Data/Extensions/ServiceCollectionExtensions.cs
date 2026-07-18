@@ -37,6 +37,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IProductImportService, ProductImportService>();
+        services.AddScoped<ISettingsService, SettingsService>();
+        services.AddScoped<IDataManagementService, DataManagementService>();
+        services.AddScoped<IUserAdminService, UserAdminService>();
 
         return services;
     }

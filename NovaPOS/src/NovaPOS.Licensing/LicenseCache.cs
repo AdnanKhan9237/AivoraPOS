@@ -48,6 +48,14 @@ public sealed class LicenseCache
         File.WriteAllText(CacheFilePath, encrypted);
     }
 
+    public void Clear()
+    {
+        if (File.Exists(CacheFilePath))
+        {
+            File.Delete(CacheFilePath);
+        }
+    }
+
     public bool IsWithinGracePeriod(CacheEntry entry)
     {
         return entry.LastValidatedUtc.AddDays(LicenseConstants.GracePeriodDays) >= DateTime.UtcNow;

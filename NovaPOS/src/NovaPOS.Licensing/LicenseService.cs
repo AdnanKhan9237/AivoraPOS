@@ -5,6 +5,7 @@ using NovaPOS.Core.Extensions;
 using NovaPOS.Core.Interfaces.Licensing;
 using NovaPOS.Core.Interfaces.Repositories;
 using NovaPOS.Core.Models;
+using NovaPOS.Core.Models.Settings;
 using NovaPOS.Licensing.Constants;
 
 namespace NovaPOS.Licensing;
@@ -40,9 +41,11 @@ public sealed class LicenseService : ILicenseService
     public bool ShowReceiptWatermark => IsTrial;
     public int? TrialDaysRemaining => _lastCheckResult?.TrialDaysRemaining;
     public DateTime? ExpiresAt => _lastCheckResult?.ExpiresAt;
+    public string? MachineId { get; private set; }
 
     public async Task<LicenseCheckResult> ValidateOnLaunchAsync(CancellationToken cancellationToken = default)
     {
+        MachineId = HardwareFingerprint.Generate().Hash;
         var license = await _licenseInfoRepository.GetAsync(cancellationToken);
         var fingerprint = HardwareFingerprint.Generate();
         var cache = _licenseCache.Read();
@@ -169,6 +172,39 @@ public sealed class LicenseService : ILicenseService
             LicenseStatus.Trial or LicenseStatus.Valid or LicenseStatus.GracePeriod => EffectivePlan.Supports(feature),
             _ => false
         };
+    }
+
+    public async Task<LicenseDetailsDto> GetLicenseDetailsAsync(CancellationToken cancellationToken = default)
+    {
+        MachineId ??= HardwareFingerprint.Generate().Hash;
+        var license = await _licenseInfoRepository.GetAsync(cancellationToken);
+
+        return new LicenseDetailsDto
+        {
+            PlanName = IsTrial ? "Trial" : EffectivePlan.ToString(),
+            ExpiresAt = ExpiresAt,
+            MachineId = MachineId,
+            LicensedBusinessName = license?.BusinessName,
+            IsTrial = IsTrial,
+            TrialDaysRemaining = TrialDaysRemaining
+        };
+    }
+
+    public async Task<bool> TransferLicenseAsync(CancellationToken cancellationToken = default)
+    {
+        var license = await _licenseInfoRepository.GetAsync(cancellationToken);
+        if (license is null)
+        {
+            return false;
+        }
+
+        _licenseCache.Clear();
+        await _licenseInfoRepository.DeleteAsync(cancellationToken);
+
+        _lastCheckResult = null;
+        await ValidateOnLaunchAsync(cancellationToken);
+        _logger.LogInformation("License transferred off this machine.");
+        return true;
     }
 
     private Task<LicenseCheckResult> FinalizeAsync(

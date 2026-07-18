@@ -1,5 +1,6 @@
 using NovaPOS.Core.Enums;
 using NovaPOS.Core.Models;
+using NovaPOS.Core.Models.Settings;
 
 namespace NovaPOS.Core.Interfaces.Licensing;
 
@@ -17,4 +18,7 @@ public interface ILicenseService
     Task<LicenseCheckResult> ValidateOnLaunchAsync(CancellationToken cancellationToken = default);
     Task<LicenseActivationResult> ActivateAsync(string licenseKey, string businessName, CancellationToken cancellationToken = default);
     bool CanUse(LicenseFeature feature);
+    string? MachineId { get; }
+    Task<bool> TransferLicenseAsync(CancellationToken cancellationToken = default);
+    Task<Core.Models.Settings.LicenseDetailsDto> GetLicenseDetailsAsync(CancellationToken cancellationToken = default);
 }

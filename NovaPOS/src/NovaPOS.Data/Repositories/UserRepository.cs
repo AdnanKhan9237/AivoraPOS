@@ -38,4 +38,12 @@ public class UserRepository : Repository<User>, IUserRepository
             .OrderBy(x => x.FullName)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<User>> GetAllUsersAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AsNoTracking()
+            .OrderBy(x => x.FullName)
+            .ToListAsync(cancellationToken);
+    }
 }

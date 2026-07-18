@@ -6,8 +6,11 @@ namespace NovaPOS.Data.Repositories;
 
 public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
 {
+    private readonly AppDbContext _context;
+
     public AuditLogRepository(AppDbContext context) : base(context)
     {
+        _context = context;
     }
 
     public async Task<IReadOnlyList<AuditLog>> GetRecentAsync(int count, CancellationToken cancellationToken = default)
@@ -61,6 +64,13 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
             .OrderByDescending(x => x.CreatedAt)
             .Take(500)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> DeleteOlderThanAsync(DateTime cutoffUtc, CancellationToken cancellationToken = default)
+    {
+        return await _context.AuditLogs
+            .Where(x => x.CreatedAt < cutoffUtc)
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
     public override Task DeleteAsync(AuditLog entity, CancellationToken cancellationToken = default)

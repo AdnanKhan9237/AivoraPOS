@@ -41,4 +41,14 @@ public class LicenseInfoRepository : ILicenseInfoRepository
         await _context.SaveChangesAsync(cancellationToken);
         return licenseInfo;
     }
+
+    public async Task DeleteAsync(CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.LicenseInfos.FirstOrDefaultAsync(cancellationToken);
+        if (existing is not null)
+        {
+            _context.LicenseInfos.Remove(existing);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+    }
 }

@@ -11,6 +11,10 @@ public static class AppPaths
 
     public static string LogsDirectory => Path.Combine(AppDataRoot, "logs");
 
+    public static string AssetsDirectory => Path.Combine(AppDataRoot, "assets");
+
+    public static string LogoFilePath => Path.Combine(AssetsDirectory, "logo.png");
+
     public static string DatabaseFilePath => Path.Combine(DataDirectory, "novapos.db");
 
     public static string ReceiptsDirectory => Path.Combine(AppDataRoot, "receipts");
@@ -23,5 +27,6 @@ public static class AppPaths
         Directory.CreateDirectory(LogsDirectory);
         Directory.CreateDirectory(ReceiptsDirectory);
         Directory.CreateDirectory(ReportsDirectory);
+        Directory.CreateDirectory(AssetsDirectory);
     }
 }

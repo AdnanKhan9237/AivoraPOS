@@ -7,6 +7,7 @@ using NovaPOS.App.ViewModels.Products;
 using NovaPOS.App.ViewModels.Reports;
 using NovaPOS.App.ViewModels.Sales;
 using NovaPOS.App.ViewModels.Settings;
+using NovaPOS.App.ViewModels.Settings;
 using NovaPOS.App.ViewModels.Shell;
 using NovaPOS.App.ViewModels.Users;
 using NovaPOS.Core.Enums;
@@ -26,7 +27,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly INavigationService _navigationService;
     private readonly IInventoryAlertService _inventoryAlertService;
     private readonly IReportService _reportService;
-    private readonly IAppSettingRepository _appSettingRepository;
+    private readonly ISettingsService _settingsService;
     private readonly ISessionTimeoutService _sessionTimeoutService;
     private readonly IAuthService _authService;
     private readonly ReportsViewModel _reportsViewModel;
@@ -39,7 +40,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         INavigationService navigationService,
         IInventoryAlertService inventoryAlertService,
         IReportService reportService,
-        IAppSettingRepository appSettingRepository,
+        ISettingsService settingsService,
         ISessionTimeoutService sessionTimeoutService,
         IAuthService authService,
         IUserRepository userRepository,
@@ -52,7 +53,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _navigationService = navigationService;
         _inventoryAlertService = inventoryAlertService;
         _reportService = reportService;
-        _appSettingRepository = appSettingRepository;
+        _settingsService = settingsService;
         _sessionTimeoutService = sessionTimeoutService;
         _authService = authService;
         _reportsViewModel = reportsViewModel;
@@ -186,8 +187,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         RequestLock(DateTime.Now);
     }
 
+    private Type? _previousViewModelType;
+
     private void OnCurrentViewModelChanged(object? sender, EventArgs e)
     {
+        if (_previousViewModelType == typeof(SettingsViewModel))
+        {
+            _ = ReloadBusinessNameAsync();
+        }
+
+        _previousViewModelType = _navigationService.CurrentViewModelType;
         OnPropertyChanged(nameof(CurrentPage));
         UpdateSelectedNavigation();
         _reportsViewModel.UpgradeRequested -= OnReportsUpgradeRequested;
@@ -289,18 +298,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task InitializeAsync()
     {
-        var storeSetting = await _appSettingRepository.GetByKeyAsync("Store.Name");
-        if (!string.IsNullOrWhiteSpace(storeSetting?.Value))
-        {
-            BusinessName = storeSetting.Value;
-        }
-
+        await ReloadBusinessNameAsync();
         await RefreshInventoryAlertsAsync();
         await _navigationService.NavigateToAsync<SalesViewModel>();
         UpdateSelectedNavigation();
 
         _statusTimer.Start();
         await RefreshStatusBarAsync();
+    }
+
+    private async Task ReloadBusinessNameAsync()
+    {
+        var business = await _settingsService.GetBusinessInfoAsync();
+        if (!string.IsNullOrWhiteSpace(business.Name))
+        {
+            BusinessName = business.Name;
+        }
     }
 
     private async Task RefreshStatusBarAsync()

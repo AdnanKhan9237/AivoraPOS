@@ -84,14 +84,25 @@ public class DatabaseSeeder : IDatabaseSeeder
 
         var settings = new[]
         {
-            new AppSetting { Key = "Store.Name", Value = "NovaPOS Demo Store" },
-            new AppSetting { Key = "Store.Currency", Value = "USD" },
-            new AppSetting { Key = "Tax.DefaultRate", Value = "0.0825" },
-            new AppSetting { Key = "Receipt.Footer", Value = "Thank you for your business!" },
-            new AppSetting { Key = "Receipt.AutoPrint", Value = "false" },
-            new AppSetting { Key = "Printer.Name", Value = string.Empty },
-            new AppSetting { Key = "UI.Theme", Value = "Light" },
-            new AppSetting { Key = "Session.IdleTimeoutMinutes", Value = "5" }
+            new AppSetting { Key = SettingKeys.StoreName, Value = "NovaPOS Demo Store" },
+            new AppSetting { Key = SettingKeys.StoreAddress, Value = "123 Main Street" },
+            new AppSetting { Key = SettingKeys.StorePhone, Value = "(555) 010-2000" },
+            new AppSetting { Key = SettingKeys.CurrencySymbol, Value = "$" },
+            new AppSetting { Key = SettingKeys.CurrencyPosition, Value = CurrencyPosition.Before.ToString() },
+            new AppSetting { Key = SettingKeys.DefaultTaxRate, Value = "0.0825" },
+            new AppSetting { Key = SettingKeys.ReceiptHeader, Value = string.Empty },
+            new AppSetting { Key = SettingKeys.ReceiptFooter, Value = "Thank you for your business!" },
+            new AppSetting { Key = SettingKeys.ReceiptShowLogo, Value = "false" },
+            new AppSetting { Key = SettingKeys.ReceiptAutoPrint, Value = "false" },
+            new AppSetting { Key = SettingKeys.ReceiptWidth, Value = ((int)ReceiptWidth.Mm80).ToString() },
+            new AppSetting { Key = SettingKeys.PrinterName, Value = string.Empty },
+            new AppSetting { Key = SettingKeys.IdleTimeoutMinutes, Value = "5" },
+            new AppSetting { Key = SettingKeys.RequireManagerForDiscount, Value = "false" },
+            new AppSetting { Key = SettingKeys.AllowNegativeStock, Value = "false" },
+            new AppSetting { Key = SettingKeys.DefaultPaymentMethod, Value = PaymentMethod.Cash.ToString() },
+            new AppSetting { Key = SettingKeys.SoundOnSaleComplete, Value = "true" },
+            new AppSetting { Key = SettingKeys.UiTheme, Value = "Light" },
+            new AppSetting { Key = "Store.Currency", Value = "USD" }
         };
 
         await _context.AppSettings.AddRangeAsync(settings, cancellationToken);

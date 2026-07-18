@@ -12,4 +12,5 @@ public interface IAuditLogRepository : IRepository<AuditLog>
         Guid? userId,
         string? actionContains,
         CancellationToken cancellationToken = default);
+    Task<int> DeleteOlderThanAsync(DateTime cutoffUtc, CancellationToken cancellationToken = default);
 }

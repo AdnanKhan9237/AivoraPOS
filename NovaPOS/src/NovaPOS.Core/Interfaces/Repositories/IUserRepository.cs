@@ -8,4 +8,5 @@ public interface IUserRepository : IRepository<User>
     Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> GetActiveUsersAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> GetActiveCashiersAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<User>> GetAllUsersAsync(CancellationToken cancellationToken = default);
 }
