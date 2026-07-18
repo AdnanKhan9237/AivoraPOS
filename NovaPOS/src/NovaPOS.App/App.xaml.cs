@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NovaPOS.App.Logging;
 using NovaPOS.App.ViewModels;
+using NovaPOS.App.ViewModels.Sales;
 using NovaPOS.App.Views;
 using NovaPOS.Core.Constants;
 using NovaPOS.Core.Entities;
@@ -131,6 +132,7 @@ public partial class App : Application
 
         services.AddSingleton<ApplicationSessionCoordinator>();
         services.AddSingleton<MainWindow>();
+        services.AddScoped<SalesViewModel>();
         services.AddScoped<MainViewModel>(sp =>
         {
             var coordinator = sp.GetRequiredService<ApplicationSessionCoordinator>();
@@ -139,6 +141,7 @@ public partial class App : Application
                 sp.GetRequiredService<ICurrentUserService>(),
                 sp.GetRequiredService<IAuthorizationService>(),
                 sp.GetRequiredService<IServiceScopeFactory>(),
+                sp.GetRequiredService<SalesViewModel>(),
                 vm =>
                 {
                     var window = new AuditLogWindow { DataContext = vm, Owner = Current.MainWindow };

@@ -9,4 +9,5 @@ public interface IProductRepository : IRepository<Product>
     Task<IReadOnlyList<Product>> GetActiveByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Product>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Product>> GetLowStockAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Product>> GetActiveCatalogAsync(CancellationToken cancellationToken = default);
 }

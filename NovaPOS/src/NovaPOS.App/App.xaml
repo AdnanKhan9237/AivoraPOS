@@ -3,5 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" xmlns:converters="clr-namespace:NovaPOS.App.Converters" />
     </Application.Resources>
 </Application>

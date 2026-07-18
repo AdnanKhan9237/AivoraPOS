@@ -1,0 +1,23 @@
+<Window x:Class="NovaPOS.App.Views.Sales.QuickSkuWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Quick Add by SKU"
+        Height="180"
+        Width="360"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        KeyDown="OnKeyDown">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="Enter SKU" />
+        <TextBox x:Name="SkuBox" Grid.Row="1" Height="36" Margin="0,8,0,16" FontSize="16" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" Width="90" Margin="0,0,8,0" Click="OnCancel" />
+            <Button Content="Add" Width="90" Click="OnAdd" />
+        </StackPanel>
+    </Grid>
+</Window>

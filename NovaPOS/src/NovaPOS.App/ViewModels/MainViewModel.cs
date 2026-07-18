@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NovaPOS.Core.Enums;
+using NovaPOS.App.ViewModels.Sales;
 using NovaPOS.Core.Interfaces.Licensing;
 using NovaPOS.Core.Interfaces.Repositories;
 using NovaPOS.Core.Interfaces.Security;
@@ -22,6 +23,7 @@ public partial class MainViewModel : ObservableObject
         ICurrentUserService currentUserService,
         IAuthorizationService authorizationService,
         IServiceScopeFactory scopeFactory,
+        SalesViewModel salesViewModel,
         Action<AuditLogViewModel> showAuditLog,
         Action requestLockScreen)
     {
@@ -29,6 +31,7 @@ public partial class MainViewModel : ObservableObject
         _currentUserService = currentUserService;
         _authorizationService = authorizationService;
         _scopeFactory = scopeFactory;
+        Sales = salesViewModel;
         _showAuditLog = showAuditLog;
         _requestLockScreen = requestLockScreen;
         RefreshLicenseStatus();
@@ -50,6 +53,8 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _canViewAuditLog;
+
+    public SalesViewModel Sales { get; }
 
     public void RefreshLicenseStatus()
     {

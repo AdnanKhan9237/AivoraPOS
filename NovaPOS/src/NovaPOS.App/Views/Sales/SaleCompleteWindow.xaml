@@ -1,0 +1,34 @@
+<Window x:Class="NovaPOS.App.Views.Sales.SaleCompleteWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sale Complete"
+        Height="300"
+        Width="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Sale Complete!" FontSize="24" FontWeight="Bold" Foreground="#1F7A1F" />
+        <StackPanel Grid.Row="1" Margin="0,12,0,16">
+            <TextBlock Text="{Binding SaleNumber, StringFormat=Receipt #{0}}" FontSize="16" />
+            <TextBlock Text="{Binding TotalAmount, StringFormat=Total: {0:C}}" FontSize="16" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2">
+            <Button Content="Print Receipt" Height="36" Margin="0,0,0,8" Command="{Binding PrintReceiptCommand}" />
+            <Button Content="Open Saved PDF" Height="36" Margin="0,0,0,8" Command="{Binding OpenReceiptFolderCommand}" />
+            <Button Content="Email Receipt (Pro)"
+                    Height="36"
+                    Command="{Binding EmailReceiptCommand}"
+                    IsEnabled="{Binding CanEmailReceipt}" />
+        </StackPanel>
+
+        <Button Grid.Row="3" Content="Done" Height="36" HorizontalAlignment="Right" Width="100" Click="OnDone" />
+    </Grid>
+</Window>

@@ -31,6 +31,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
         services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
+        services.AddScoped<ISaleService, SaleService>();
 
         return services;
     }

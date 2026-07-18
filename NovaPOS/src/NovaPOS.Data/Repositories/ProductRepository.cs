@@ -56,4 +56,14 @@ public class ProductRepository : Repository<Product>, IProductRepository
             .OrderBy(x => x.StockQuantity)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Product>> GetActiveCatalogAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AsNoTracking()
+            .Include(x => x.Category)
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+    }
 }

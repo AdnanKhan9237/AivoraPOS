@@ -87,7 +87,9 @@ public class DatabaseSeeder : IDatabaseSeeder
             new AppSetting { Key = "Store.Name", Value = "NovaPOS Demo Store" },
             new AppSetting { Key = "Store.Currency", Value = "USD" },
             new AppSetting { Key = "Tax.DefaultRate", Value = "0.0825" },
-            new AppSetting { Key = "Receipt.Footer", Value = "Thank you for your business!" }
+            new AppSetting { Key = "Receipt.Footer", Value = "Thank you for your business!" },
+            new AppSetting { Key = "Receipt.AutoPrint", Value = "false" },
+            new AppSetting { Key = "Printer.Name", Value = string.Empty }
         };
 
         await _context.AppSettings.AddRangeAsync(settings, cancellationToken);
