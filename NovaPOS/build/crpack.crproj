@@ -9,17 +9,17 @@
   </rule>
 
   <!-- Do not obfuscate EF Core migrations -->
-  <rule pattern="namespace('NovaPOS.Data.Migrations')" preset="none" inherit="false" />
+  <rule pattern="namespace('AivoraPOS.Data.Migrations')" preset="none" inherit="false" />
 
   <!-- Preserve public licensing API surface -->
-  <rule pattern="namespace('NovaPOS.Licensing')" preset="none" inherit="false" />
+  <rule pattern="namespace('AivoraPOS.Licensing')" preset="none" inherit="false" />
 
-  <module path="NovaPOS.exe">
+  <module path="AivoraPOS.exe">
     <!-- Resource strings and XAML BAML remain in embedded resources -->
-    <rule pattern="namespace('NovaPOS.App')" inherit="true" />
-    <rule pattern="namespace('NovaPOS.Data')" inherit="true" />
-    <rule pattern="namespace('NovaPOS.Security')" inherit="true" />
-    <rule pattern="namespace('NovaPOS.Reporting')" inherit="true" />
-    <rule pattern="namespace('NovaPOS.Core')" inherit="true" />
+    <rule pattern="namespace('AivoraPOS.App')" inherit="true" />
+    <rule pattern="namespace('AivoraPOS.Data')" inherit="true" />
+    <rule pattern="namespace('AivoraPOS.Security')" inherit="true" />
+    <rule pattern="namespace('AivoraPOS.Reporting')" inherit="true" />
+    <rule pattern="namespace('AivoraPOS.Core')" inherit="true" />
   </module>
 </project>
