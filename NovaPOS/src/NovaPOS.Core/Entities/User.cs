@@ -11,6 +11,10 @@ public class User : BaseEntity
     public UserRole Role { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? LastLoginAt { get; set; }
+    public int FailedPinAttempts { get; set; }
+    public DateTime? PinLockedUntilUtc { get; set; }
+    public int FailedPasswordAttempts { get; set; }
+    public bool IsAccountLocked { get; set; }
 
     public ICollection<Sale> Sales { get; set; } = new List<Sale>();
     public ICollection<Refund> ProcessedRefunds { get; set; } = new List<Refund>();

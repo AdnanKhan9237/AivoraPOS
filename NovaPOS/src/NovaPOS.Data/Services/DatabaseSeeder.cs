@@ -27,6 +27,7 @@ public class DatabaseSeeder : IDatabaseSeeder
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         await SeedAdminUserAsync(cancellationToken);
+        await SeedDemoCashierAsync(cancellationToken);
         await SeedDefaultSettingsAsync(cancellationToken);
         await SeedSampleCatalogAsync(cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
@@ -51,6 +52,27 @@ public class DatabaseSeeder : IDatabaseSeeder
 
         await _context.Users.AddAsync(admin, cancellationToken);
         _logger.LogInformation("Seeded default admin account '{Username}'.", admin.Username);
+    }
+
+    private async Task SeedDemoCashierAsync(CancellationToken cancellationToken)
+    {
+        if (await _context.Users.AnyAsync(x => x.Role == UserRole.Cashier, cancellationToken))
+        {
+            return;
+        }
+
+        var cashier = new User
+        {
+            FullName = "Demo Cashier",
+            Username = "cashier",
+            PinHash = _passwordHasher.HashPin("2468"),
+            PasswordHash = _passwordHasher.HashPassword("Cashier@1234"),
+            Role = UserRole.Cashier,
+            IsActive = true
+        };
+
+        await _context.Users.AddAsync(cashier, cancellationToken);
+        _logger.LogInformation("Seeded demo cashier account '{Username}'.", cashier.Username);
     }
 
     private async Task SeedDefaultSettingsAsync(CancellationToken cancellationToken)

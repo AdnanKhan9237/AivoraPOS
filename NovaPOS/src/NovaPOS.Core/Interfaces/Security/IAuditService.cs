@@ -1,3 +1,5 @@
+using NovaPOS.Core.Enums;
+
 namespace NovaPOS.Core.Interfaces.Security;
 
 public interface IAuditService
@@ -6,8 +8,8 @@ public interface IAuditService
         string action,
         string? entityType = null,
         string? entityId = null,
-        string? oldValues = null,
-        string? newValues = null,
+        object? oldValues = null,
+        object? newValues = null,
         Guid? userId = null,
         string? ipAddress = null,
         CancellationToken cancellationToken = default);

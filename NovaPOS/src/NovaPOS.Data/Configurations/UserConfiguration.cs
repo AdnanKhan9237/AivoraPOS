@@ -17,6 +17,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.PinHash).IsRequired();
         builder.Property(x => x.PasswordHash).IsRequired();
         builder.Property(x => x.Role).HasConversion<int>();
+        builder.Property(x => x.FailedPinAttempts).HasDefaultValue(0);
+        builder.Property(x => x.FailedPasswordAttempts).HasDefaultValue(0);
+        builder.Property(x => x.IsAccountLocked).HasDefaultValue(false);
 
         builder.HasIndex(x => x.Username).IsUnique();
     }

@@ -19,14 +19,30 @@
                 Background="#1F4E79"
                 Padding="12,8">
             <DockPanel>
-                <Button DockPanel.Dock="Right"
-                        Content="Activate License"
-                        Padding="12,4"
-                        Command="{Binding ActivateLicenseCommand}" />
-                <TextBlock Text="{Binding LicenseStatusText}"
-                           Foreground="White"
-                           VerticalAlignment="Center"
-                           FontWeight="SemiBold" />
+                <StackPanel DockPanel.Dock="Right"
+                            Orientation="Horizontal">
+                    <Button Content="Audit Log"
+                            Padding="12,4"
+                            Margin="0,0,8,0"
+                            Visibility="{Binding CanViewAuditLog, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Command="{Binding OpenAuditLogCommand}" />
+                    <Button Content="Sign Out"
+                            Padding="12,4"
+                            Margin="0,0,8,0"
+                            Command="{Binding SignOutCommand}" />
+                    <Button Content="Activate License"
+                            Padding="12,4"
+                            Command="{Binding ActivateLicenseCommand}" />
+                </StackPanel>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding LicenseStatusText}"
+                               Foreground="White"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding UserStatusText}"
+                               Foreground="#D6E4F0"
+                               Margin="0,2,0,0"
+                               FontSize="12" />
+                </StackPanel>
             </DockPanel>
         </Border>
 
@@ -65,7 +81,7 @@
                                FontSize="22"
                                FontWeight="Medium"
                                HorizontalAlignment="Center" />
-                    <TextBlock Text="Licensing system is active. Use Activate License to register this machine."
+                    <TextBlock Text="You are signed in. Sales and refunds are recorded under your user account."
                                Margin="0,12,0,0"
                                TextWrapping="Wrap"
                                Width="520"

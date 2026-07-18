@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using NovaPOS.Core.Interfaces.Security;
+using NovaPOS.Security.Infrastructure;
 
 namespace NovaPOS.Security.Cryptography;
 
@@ -8,12 +10,13 @@ public class AesEncryptionService : IEncryptionService
 {
     private const int KeySizeBytes = 32;
     private const int IvSizeBytes = 16;
+    private const string DatabaseSecret = "NovaPOS-SQLCipher-v1-PRODUCTION-CHANGE-ME";
 
     private readonly byte[] _masterKey;
 
     public AesEncryptionService()
     {
-        _masterKey = DeriveMachineKey();
+        _masterKey = DeriveKey($"{MachineIdentity.GetFingerprintHash()}|{DatabaseSecret}");
     }
 
     public string Encrypt(string plainText)
@@ -57,9 +60,7 @@ public class AesEncryptionService : IEncryptionService
         return Convert.ToBase64String(bytes);
     }
 
-    private static byte[] DeriveMachineKey()
-    {
-        var entropy = $"{Environment.MachineName}|{Environment.UserName}|NovaPOS|v1";
-        return SHA256.HashData(Encoding.UTF8.GetBytes(entropy));
-    }
+    public string DeriveDatabasePassword() => Convert.ToBase64String(_masterKey);
+
+    private static byte[] DeriveKey(string entropy) => SHA256.HashData(Encoding.UTF8.GetBytes(entropy));
 }

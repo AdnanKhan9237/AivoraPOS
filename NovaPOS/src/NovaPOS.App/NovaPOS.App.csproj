@@ -29,4 +29,17 @@
     <ProjectReference Include="..\NovaPOS.Security\NovaPOS.Security.csproj" />
   </ItemGroup>
 
+  <Target Name="ConfuserExObfuscation"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and Exists('$(MSBuildThisFileDirectory)..\..\build\tools\ConfuserEx\Confuser.CLI.exe')">
+    <Exec Command="&quot;$(MSBuildThisFileDirectory)..\..\build\tools\ConfuserEx\Confuser.CLI.exe&quot; &quot;$(MSBuildThisFileDirectory)..\..\build\confuser.crproj&quot;" />
+  </Target>
+
+  <Target Name="GenerateIntegrityChecksum"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="powershell -NoProfile -Command &quot;if (Test-Path '$(TargetPath)') { (Get-FileHash '$(TargetPath)' -Algorithm SHA256).Hash | Set-Content -Path '$(TargetDir)$(AssemblyName).sha256' }&quot;"
+          IgnoreExitCode="true" />
+  </Target>
+
 </Project>

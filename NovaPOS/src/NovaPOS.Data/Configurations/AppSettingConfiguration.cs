@@ -14,6 +14,7 @@ public class AppSettingConfiguration : IEntityTypeConfiguration<AppSetting>
 
         builder.Property(x => x.Key).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Value).IsRequired();
+        builder.Property(x => x.IsSensitive).HasDefaultValue(false);
 
         builder.HasIndex(x => x.Key).IsUnique();
     }
