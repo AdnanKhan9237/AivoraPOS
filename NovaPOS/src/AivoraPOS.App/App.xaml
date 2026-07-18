@@ -1,0 +1,16 @@
+<Application x:Class="AivoraPOS.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/LightTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" xmlns:converters="clr-namespace:AivoraPOS.App.Converters" />
+            <converters:StockLevelToBrushConverter x:Key="StockLevelToBrushConverter" xmlns:converters="clr-namespace:AivoraPOS.App.Converters" />
+            <converters:EditModeTitleConverter x:Key="EditModeTitleConverter" xmlns:converters="clr-namespace:AivoraPOS.App.Converters" />
+            <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" xmlns:converters="clr-namespace:AivoraPOS.App.Converters" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
