@@ -8,40 +8,71 @@
         Height="720"
         Width="1280"
         WindowStartupLocation="CenterScreen">
-    <Grid Margin="24">
+    <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="NovaPOS"
-                       FontSize="28"
-                       FontWeight="SemiBold" />
-            <TextBlock Text="{Binding StatusMessage}"
-                       Margin="0,8,0,0"
-                       FontSize="14"
-                       Foreground="#444" />
-        </StackPanel>
+        <Border Grid.Row="0"
+                Background="#1F4E79"
+                Padding="12,8">
+            <DockPanel>
+                <Button DockPanel.Dock="Right"
+                        Content="Activate License"
+                        Padding="12,4"
+                        Command="{Binding ActivateLicenseCommand}" />
+                <TextBlock Text="{Binding LicenseStatusText}"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold" />
+            </DockPanel>
+        </Border>
 
         <Border Grid.Row="1"
-                BorderBrush="#DDD"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="24">
-            <StackPanel VerticalAlignment="Center"
-                        HorizontalAlignment="Center">
-                <TextBlock Text="Point of Sale"
-                           FontSize="22"
-                           FontWeight="Medium"
-                           HorizontalAlignment="Center" />
-                <TextBlock Text="Solution scaffold initialized. Licensing, checkout, and reporting modules will be built next."
-                           Margin="0,12,0,0"
-                           TextWrapping="Wrap"
-                           Width="520"
-                           TextAlignment="Center"
-                           Foreground="#666" />
-            </StackPanel>
+                Background="#FFF4CE"
+                Padding="12,6"
+                Visibility="{Binding ShowTrialBanner, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBlock Text="Trial mode is active. Upgrade to remove product limits and receipt watermarks."
+                       Foreground="#7A5B00" />
         </Border>
+
+        <Grid Grid.Row="2" Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                <TextBlock Text="NovaPOS"
+                           FontSize="28"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding StatusMessage}"
+                           Margin="0,8,0,0"
+                           FontSize="14"
+                           Foreground="#444" />
+            </StackPanel>
+
+            <Border Grid.Row="1"
+                    BorderBrush="#DDD"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24">
+                <StackPanel VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                    <TextBlock Text="Point of Sale"
+                               FontSize="22"
+                               FontWeight="Medium"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Licensing system is active. Use Activate License to register this machine."
+                               Margin="0,12,0,0"
+                               TextWrapping="Wrap"
+                               Width="520"
+                               TextAlignment="Center"
+                               Foreground="#666" />
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

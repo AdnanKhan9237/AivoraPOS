@@ -1,11 +1,14 @@
 using System.IO;
 using System.Windows;
-using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NovaPOS.App.ViewModels;
+using NovaPOS.App.Views;
 using NovaPOS.Core.Constants;
+using NovaPOS.Core.Enums;
+using NovaPOS.Core.Interfaces.Licensing;
 using NovaPOS.Core.Interfaces.Services;
+using NovaPOS.Core.Models;
 using NovaPOS.Data.Extensions;
 using NovaPOS.Licensing.Extensions;
 using NovaPOS.Reporting.Extensions;
@@ -57,11 +60,23 @@ public partial class App : Application
             var initializer = _host.Services.GetRequiredService<IDatabaseInitializer>();
             await initializer.InitializeAsync();
 
+            var licenseService = _host.Services.GetRequiredService<ILicenseService>();
+            var licenseResult = await licenseService.ValidateOnLaunchAsync();
+
+            if (!await HandleLicenseGateAsync(licenseService, licenseResult))
+            {
+                Shutdown(0);
+                return;
+            }
+
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-            mainWindow.DataContext = _host.Services.GetRequiredService<MainViewModel>();
+            var mainViewModel = _host.Services.GetRequiredService<MainViewModel>();
+            mainViewModel.RefreshLicenseStatus();
+            mainViewModel.OnActivateLicenseRequested += () => _ = ShowActivationDialogAsync(licenseService, mainViewModel);
+            mainWindow.DataContext = mainViewModel;
             mainWindow.Show();
 
-            Log.Information("NovaPOS started successfully.");
+            Log.Information("NovaPOS started successfully. License status: {Status}", licenseResult.Status);
         }
         catch (Exception ex)
         {
@@ -73,6 +88,71 @@ public partial class App : Application
                 MessageBoxImage.Error);
             Shutdown(-1);
         }
+    }
+
+    private async Task<bool> HandleLicenseGateAsync(ILicenseService licenseService, LicenseCheckResult licenseResult)
+    {
+        switch (licenseResult.Status)
+        {
+            case LicenseStatus.Invalid:
+            {
+                var activate = await ShowGateDialogAsync<InvalidLicenseWindow>(licenseResult.Message, showReadOnly: false);
+                return activate && await ShowActivationDialogAsync(licenseService, null);
+            }
+
+            case LicenseStatus.Expired when licenseResult.IsReadOnlyMode:
+            {
+                var activate = await ShowGateDialogAsync<LicenseExpiredWindow>(licenseResult.Message, showReadOnly: true);
+                if (!activate)
+                {
+                    return true;
+                }
+
+                return await ShowActivationDialogAsync(licenseService, null);
+            }
+
+            default:
+                return licenseResult.CanRunApplication;
+        }
+    }
+
+    private Task<bool> ShowGateDialogAsync<TWindow>(string message, bool showReadOnly)
+        where TWindow : Window, new()
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        var window = new TWindow();
+
+        window.DataContext = new LicenseGateViewModel(message, activate =>
+        {
+            tcs.TrySetResult(activate);
+            window.Close();
+        });
+
+        window.ShowDialog();
+        return tcs.Task;
+    }
+
+    private async Task<bool> ShowActivationDialogAsync(ILicenseService licenseService, MainViewModel? mainViewModel)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        var window = new ActivateLicenseWindow();
+
+        window.DataContext = new ActivateLicenseViewModel(licenseService, success =>
+        {
+            tcs.TrySetResult(success);
+            window.Close();
+        });
+
+        window.ShowDialog();
+        var activated = await tcs.Task;
+
+        if (activated)
+        {
+            await licenseService.ValidateOnLaunchAsync();
+            mainViewModel?.RefreshLicenseStatus();
+        }
+
+        return activated;
     }
 
     protected override async void OnExit(ExitEventArgs e)
@@ -87,7 +167,7 @@ public partial class App : Application
         base.OnExit(e);
     }
 
-    private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         Log.Error(e.Exception, "Unhandled UI exception.");
         MessageBox.Show(
