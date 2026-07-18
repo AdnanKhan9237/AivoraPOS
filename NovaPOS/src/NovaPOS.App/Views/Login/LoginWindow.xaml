@@ -19,15 +19,8 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,12">
-            <controls:BrandLogoView LogoWidth="90" LogoHeight="50"
-                                    HorizontalAlignment="Center"
+            <controls:BrandLogoView LogoWidth="90" HorizontalAlignment="Center"
                                     FallbackForeground="{DynamicResource TextPrimaryBrush}" />
-            <TextBlock Text="AivoraPOS"
-                       FontSize="20"
-                       FontWeight="Bold"
-                       Foreground="{DynamicResource TextPrimaryBrush}"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,0" />
         </StackPanel>
 
         <TextBlock Grid.Row="1"

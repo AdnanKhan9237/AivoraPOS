@@ -121,7 +121,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/release/NovaPOS-${{ steps.version.outputs.version }}.msi
+            artifacts/release/AivoraPOS-${{ steps.version.outputs.version }}.msi
             artifacts/release/NovaPOS.exe
             artifacts/release/version.json
         env:

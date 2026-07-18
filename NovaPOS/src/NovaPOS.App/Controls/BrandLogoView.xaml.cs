@@ -19,6 +19,9 @@ public partial class BrandLogoView : UserControl
     public static readonly DependencyProperty FallbackForegroundProperty =
         DependencyProperty.Register(nameof(FallbackForeground), typeof(System.Windows.Media.Brush), typeof(BrandLogoView));
 
+    public static readonly DependencyProperty LogoSourceProperty =
+        DependencyProperty.Register(nameof(LogoSource), typeof(string), typeof(BrandLogoView), new PropertyMetadata("full", OnLogoSourceChanged));
+
     public BrandLogoView()
     {
         InitializeComponent();
@@ -49,6 +52,15 @@ public partial class BrandLogoView : UserControl
         set => SetValue(FallbackForegroundProperty, value);
     }
 
+    /// <summary>
+    /// "full" loads Assets/logo.png; "icon" loads Assets/logo-icon.png.
+    /// </summary>
+    public string LogoSource
+    {
+        get => (string)GetValue(LogoSourceProperty);
+        set => SetValue(LogoSourceProperty, value);
+    }
+
     private static void OnSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is BrandLogoView view)
@@ -57,13 +69,29 @@ public partial class BrandLogoView : UserControl
         }
     }
 
+    private static void OnLogoSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is BrandLogoView view && view.IsLoaded)
+        {
+            view.LoadLogo();
+        }
+    }
+
     private void ApplySize()
     {
-        Height = LogoHeight;
+        if (!double.IsNaN(LogoHeight))
+        {
+            Height = LogoHeight;
+        }
+
         Width = double.IsNaN(LogoWidth) ? double.NaN : LogoWidth;
         if (LogoImage is not null)
         {
-            LogoImage.Height = LogoHeight;
+            if (!double.IsNaN(LogoHeight))
+            {
+                LogoImage.Height = LogoHeight;
+            }
+
             if (!double.IsNaN(LogoWidth))
             {
                 LogoImage.Width = LogoWidth;
@@ -81,7 +109,16 @@ public partial class BrandLogoView : UserControl
 
         ApplySize();
 
-        var logoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.png");
+        var fileName = string.Equals(LogoSource, "icon", StringComparison.OrdinalIgnoreCase)
+            ? "logo-icon.png"
+            : "logo.png";
+
+        var logoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", fileName);
+        if (!File.Exists(logoPath))
+        {
+            logoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "logo.png");
+        }
+
         if (!File.Exists(logoPath))
         {
             ShowFallback();

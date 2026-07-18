@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Content Include="Assets\logo.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\logo-icon.png" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\aivorapos.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

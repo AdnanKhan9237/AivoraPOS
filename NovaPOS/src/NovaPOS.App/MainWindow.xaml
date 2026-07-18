@@ -57,7 +57,10 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <controls:BrandLogoView LogoHeight="28" Margin="0,0,10,0" />
+                    <controls:BrandLogoView LogoSource="icon"
+                                            LogoHeight="28"
+                                            LogoWidth="28"
+                                            Margin="0,0,10,0" />
                     <TextBlock Text="AivoraPOS"
                                FontSize="15"
                                FontWeight="SemiBold"

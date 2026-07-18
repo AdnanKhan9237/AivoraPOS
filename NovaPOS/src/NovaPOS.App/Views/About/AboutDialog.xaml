@@ -4,14 +4,12 @@
         xmlns:controls="clr-namespace:NovaPOS.App.Controls"
         Title="About AivoraPOS"
         Width="380"
-        Height="340"
+        Height="380"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource AppBackgroundBrush}">
     <Grid Margin="24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -20,30 +18,16 @@
 
         <controls:BrandLogoView Grid.Row="0"
                                 LogoWidth="160"
-                                LogoHeight="90"
                                 HorizontalAlignment="Center"
                                 FallbackForeground="{DynamicResource TextPrimaryBrush}" />
 
         <TextBlock Grid.Row="1"
-                   Text="AivoraPOS"
-                   FontSize="22"
-                   FontWeight="Bold"
-                   HorizontalAlignment="Center"
-                   Margin="0,12,0,4"
-                   Foreground="{DynamicResource TextPrimaryBrush}" />
-
-        <TextBlock Grid.Row="2"
                    Text="{Binding VersionText}"
                    HorizontalAlignment="Center"
+                   Margin="0,12,0,16"
                    Foreground="{DynamicResource TextSecondaryBrush}" />
 
-        <TextBlock Grid.Row="3"
-                   Text="Your Vision, Our Technology"
-                   HorizontalAlignment="Center"
-                   Margin="0,8,0,16"
-                   Foreground="{DynamicResource TextSecondaryBrush}" />
-
-        <StackPanel Grid.Row="4" VerticalAlignment="Top">
+        <StackPanel Grid.Row="2" VerticalAlignment="Top">
             <Separator Margin="0,0,0,16" />
             <TextBlock Foreground="{DynamicResource TextPrimaryBrush}">
                 <Run Text="Support:   " />
@@ -63,7 +47,7 @@
                        Foreground="{DynamicResource TextSecondaryBrush}" />
         </StackPanel>
 
-        <Button Grid.Row="5"
+        <Button Grid.Row="3"
                 Content="Close"
                 Width="100"
                 Height="32"
