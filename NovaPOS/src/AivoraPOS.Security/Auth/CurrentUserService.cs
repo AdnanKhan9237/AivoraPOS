@@ -1,0 +1,24 @@
+using AivoraPOS.Core.Entities;
+using AivoraPOS.Core.Interfaces.Security;
+
+namespace AivoraPOS.Security.Auth;
+
+public sealed class CurrentUserService : ICurrentUserService
+{
+    public User? CurrentUser { get; private set; }
+    public bool IsAuthenticated => CurrentUser is not null;
+
+    public event EventHandler? CurrentUserChanged;
+
+    public void SetCurrentUser(User user)
+    {
+        CurrentUser = user;
+        CurrentUserChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Clear()
+    {
+        CurrentUser = null;
+        CurrentUserChanged?.Invoke(this, EventArgs.Empty);
+    }
+}

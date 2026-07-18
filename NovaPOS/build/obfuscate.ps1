@@ -16,7 +16,7 @@ if (-not (Test-Path $ConfuserCli)) {
 $projectXml = Get-Content $ProjectFile -Raw
 $projectXml = $projectXml -replace 'baseDir="[^"]*"', "baseDir=`"$InputDir`""
 $projectXml = $projectXml -replace 'outputDir="[^"]*"', "outputDir=`"$InputDir`""
-$tempProject = Join-Path $env:TEMP "novapos-crpack.crproj"
+$tempProject = Join-Path $env:TEMP "aivorapos-crpack.crproj"
 Set-Content -Path $tempProject -Value $projectXml -Encoding UTF8
 
 & $ConfuserCli $tempProject

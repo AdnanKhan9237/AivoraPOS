@@ -35,17 +35,17 @@ jobs:
           "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Restore NuGet packages
-        run: dotnet restore NovaPOS.sln
+        run: dotnet restore AivoraPOS.sln
 
       - name: Build solution (Release)
-        run: dotnet build NovaPOS.sln -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
+        run: dotnet build AivoraPOS.sln -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
 
       - name: Run unit tests
-        run: dotnet test NovaPOS.sln -c Release --no-build --verbosity normal
+        run: dotnet test AivoraPOS.sln -c Release --no-build --verbosity normal
 
-      - name: Publish NovaPOS.App (self-contained single-file)
+      - name: Publish AivoraPOS.App (self-contained single-file)
         run: >
-          dotnet publish src/NovaPOS.App/NovaPOS.App.csproj
+          dotnet publish src/AivoraPOS.App/AivoraPOS.App.csproj
           -c Release
           -r win-x64
           --self-contained true
@@ -77,14 +77,14 @@ jobs:
         shell: pwsh
         run: |
           $env:Path += ';' + [Environment]::GetFolderPath('UserProfile') + '\.dotnet\tools'
-          dotnet build installer/NovaPOS.Setup/NovaPOS.Setup.wixproj -c Release -p:Version=${{ steps.version.outputs.version }}
+          dotnet build installer/AivoraPOS.Setup/AivoraPOS.Setup.wixproj -c Release -p:Version=${{ steps.version.outputs.version }}
 
       - name: Collect release artifacts
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifacts/release | Out-Null
-          Copy-Item artifacts/publish/NovaPOS.exe artifacts/release/
-          $msi = Get-ChildItem installer/NovaPOS.Setup/bin/Release/*.msi | Select-Object -First 1
+          Copy-Item artifacts/publish/AivoraPOS.exe artifacts/release/
+          $msi = Get-ChildItem installer/AivoraPOS.Setup/bin/Release/*.msi | Select-Object -First 1
           Copy-Item $msi.FullName "artifacts/release/AivoraPOS-${{ steps.version.outputs.version }}.msi"
 
       - name: Code sign artifacts
@@ -95,7 +95,7 @@ jobs:
         run: |
           if ($env:CODESIGN_CERT_PATH -and (Test-Path $env:CODESIGN_CERT_PATH)) {
             ./build/sign.ps1 -Files @(
-              'artifacts/release/NovaPOS.exe',
+              'artifacts/release/AivoraPOS.exe',
               "artifacts/release/AivoraPOS-${{ steps.version.outputs.version }}.msi"
             )
           } else {
@@ -122,7 +122,7 @@ jobs:
           prerelease: false
           files: |
             artifacts/release/AivoraPOS-${{ steps.version.outputs.version }}.msi
-            artifacts/release/NovaPOS.exe
+            artifacts/release/AivoraPOS.exe
             artifacts/release/version.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
