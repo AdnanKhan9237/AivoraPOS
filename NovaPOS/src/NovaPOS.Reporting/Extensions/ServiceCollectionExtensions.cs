@@ -9,6 +9,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddNovaPOSReporting(this IServiceCollection services)
     {
         services.AddScoped<IReceiptService, ReceiptService>();
+        services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IReportExportService, ReportExportService>();
         return services;
     }
 }

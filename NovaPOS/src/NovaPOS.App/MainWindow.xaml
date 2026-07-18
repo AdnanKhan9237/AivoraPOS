@@ -20,6 +20,11 @@
         <Border Grid.Row="0" Background="#1F4E79" Padding="12,8">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="Reports"
+                            Padding="12,4"
+                            Margin="0,0,8,0"
+                            Visibility="{Binding CanViewReports, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Command="{Binding OpenReportsCommand}" />
                     <Button Content="Audit Log" Padding="12,4" Margin="0,0,8,0"
                             Visibility="{Binding CanViewAuditLog, Converter={StaticResource BooleanToVisibilityConverter}}"
                             Command="{Binding OpenAuditLogCommand}" />

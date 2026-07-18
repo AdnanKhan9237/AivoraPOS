@@ -1,0 +1,301 @@
+<Window x:Class="NovaPOS.App.Views.Reports.ReportsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+        Title="Reports &amp; Analytics"
+        Height="780"
+        Width="1180"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Reports &amp; Analytics"
+                   FontSize="24"
+                   FontWeight="SemiBold"
+                   Foreground="#1F4E79" />
+
+        <Grid Grid.Row="1" Margin="0,12,0,0">
+            <TabControl x:Name="ReportTabs">
+                <TabControl.Style>
+                    <Style TargetType="TabControl">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ShowUpgradeOverlay}" Value="True">
+                                <Setter Property="Effect">
+                                    <Setter.Value>
+                                        <BlurEffect Radius="6" />
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TabControl.Style>
+
+                <!-- Daily Summary -->
+                <TabItem Header="Daily Summary">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="220" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <DatePicker SelectedDate="{Binding DailyDate}" Width="160" />
+                            <Button Content="Refresh" Margin="8,0,0,0" Padding="12,4" Command="{Binding LoadDailyCommand}" />
+                            <Button Content="Export PDF" Margin="8,0,0,0" Padding="12,4" Command="{Binding ExportDailyPdfCommand}" />
+                        </StackPanel>
+                        <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,12">
+                            <Border Margin="4" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
+                                <StackPanel>
+                                    <TextBlock Text="Revenue" Foreground="#666" />
+                                    <TextBlock Text="{Binding DailyRevenue, StringFormat={}{0:C}}" FontSize="20" FontWeight="Bold" Foreground="#1F4E79" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="4" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
+                                <StackPanel>
+                                    <TextBlock Text="Transactions" Foreground="#666" />
+                                    <TextBlock Text="{Binding DailyTransactions}" FontSize="20" FontWeight="Bold" Foreground="#1F4E79" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="4" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
+                                <StackPanel>
+                                    <TextBlock Text="Avg. Ticket" Foreground="#666" />
+                                    <TextBlock Text="{Binding DailyAverageTicket, StringFormat={}{0:C}}" FontSize="20" FontWeight="Bold" Foreground="#1F4E79" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <lvc:CartesianChart Series="{Binding HourlySalesSeries}"
+                                                XAxes="{Binding HourlyXAxes}"
+                                                YAxes="{Binding HourlyYAxes}"
+                                                AnimationsSpeed="0:0:0"
+                                                LegendPosition="Top" />
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                <TextBlock Text="Payment Methods" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                <TextBlock Text="{Binding DailyCashRevenue, StringFormat=Cash: {0:C}}" />
+                                <TextBlock Text="{Binding DailyCardRevenue, StringFormat=Card: {0:C}}" />
+                                <TextBlock Text="{Binding DailyMixedRevenue, StringFormat=Mixed: {0:C}}" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid Grid.Row="3" Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <GroupBox Header="Top 5 Products" Margin="0,0,8,0">
+                                <DataGrid ItemsSource="{Binding DailyTopProducts}" AutoGenerateColumns="False" IsReadOnly="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="*" />
+                                        <DataGridTextColumn Header="Units" Binding="{Binding UnitsSold}" Width="60" />
+                                        <DataGridTextColumn Header="Revenue" Binding="{Binding Revenue, StringFormat={}{0:C}}" Width="90" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </GroupBox>
+                            <GroupBox Grid.Column="1" Header="Cashier Performance" Margin="8,0,0,0">
+                                <DataGrid ItemsSource="{Binding DailyCashierPerformance}" AutoGenerateColumns="False" IsReadOnly="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Cashier" Binding="{Binding CashierName}" Width="*" />
+                                        <DataGridTextColumn Header="Sales" Binding="{Binding TransactionCount}" Width="60" />
+                                        <DataGridTextColumn Header="Revenue" Binding="{Binding TotalRevenue, StringFormat={}{0:C}}" Width="90" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </GroupBox>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+
+                <!-- Date Range -->
+                <TabItem Header="Date Range">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="220" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <DatePicker SelectedDate="{Binding RangeStartDate}" Width="140" />
+                            <TextBlock Text="to" VerticalAlignment="Center" Margin="8,0" />
+                            <DatePicker SelectedDate="{Binding RangeEndDate}" Width="140" />
+                            <Button Content="Refresh" Margin="8,0,0,0" Padding="12,4" Command="{Binding LoadDateRangeCommand}" />
+                            <Button Content="Export PDF" Margin="8,0,0,0" Padding="12,4" Command="{Binding ExportDateRangePdfCommand}" />
+                        </StackPanel>
+                        <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,12">
+                            <Border Margin="4" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
+                                <StackPanel>
+                                    <TextBlock Text="Revenue" Foreground="#666" />
+                                    <TextBlock Text="{Binding RangeRevenue, StringFormat={}{0:C}}" FontSize="20" FontWeight="Bold" Foreground="#1F4E79" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="4" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
+                                <StackPanel>
+                                    <TextBlock Text="Transactions" Foreground="#666" />
+                                    <TextBlock Text="{Binding RangeTransactions}" FontSize="20" FontWeight="Bold" Foreground="#1F4E79" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="4" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
+                                <StackPanel>
+                                    <TextBlock Text="Items Sold" Foreground="#666" />
+                                    <TextBlock Text="{Binding RangeItemsSold}" FontSize="20" FontWeight="Bold" Foreground="#1F4E79" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <lvc:CartesianChart Series="{Binding RevenueTrendSeries}"
+                                                XAxes="{Binding RevenueTrendXAxes}"
+                                                YAxes="{Binding RevenueTrendYAxes}"
+                                                AnimationsSpeed="0:0:0"
+                                                LegendPosition="Top" />
+                            <lvc:PieChart Series="{Binding CategoryPieSeries}"
+                                          AnimationsSpeed="0:0:0"
+                                          LegendPosition="Right" />
+                        </Grid>
+                        <GroupBox Grid.Row="3" Header="Best Selling Products" Margin="0,12,0,0">
+                            <DataGrid ItemsSource="{Binding RangeBestSellers}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="*" />
+                                    <DataGridTextColumn Header="Units" Binding="{Binding UnitsSold}" Width="80" />
+                                    <DataGridTextColumn Header="Revenue" Binding="{Binding Revenue, StringFormat={}{0:C}}" Width="100" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </GroupBox>
+                    </Grid>
+                </TabItem>
+
+                <!-- Inventory -->
+                <TabItem Header="Inventory">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <CheckBox Content="Show only low / out of stock" IsChecked="{Binding InventoryLowStockOnly}" VerticalAlignment="Center" />
+                            <Button Content="Refresh" Margin="12,0,0,0" Padding="12,4" Command="{Binding LoadInventoryCommand}" />
+                            <Button Content="Export CSV" Margin="8,0,0,0" Padding="12,4" Command="{Binding ExportInventoryCsvCommand}" />
+                            <Button Content="Export PDF" Margin="8,0,0,0" Padding="12,4" Command="{Binding ExportInventoryPdfCommand}" />
+                        </StackPanel>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding InventoryItems}" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Status}" Value="OutOfStock">
+                                            <Setter Property="Background" Value="#FADBD8" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="LowStock">
+                                            <Setter Property="Background" Value="#FCF3CF" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="Healthy">
+                                            <Setter Property="Background" Value="#D5F5E3" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="*" />
+                                <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="100" />
+                                <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="120" />
+                                <DataGridTextColumn Header="Stock" Binding="{Binding StockQuantity}" Width="70" />
+                                <DataGridTextColumn Header="Threshold" Binding="{Binding LowStockThreshold}" Width="80" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+
+                <!-- Product Performance -->
+                <TabItem Header="Product Performance">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <DatePicker SelectedDate="{Binding ProductStartDate}" Width="140" />
+                            <TextBlock Text="to" VerticalAlignment="Center" Margin="8,0" />
+                            <DatePicker SelectedDate="{Binding ProductEndDate}" Width="140" />
+                            <Button Content="Refresh" Margin="8,0,0,0" Padding="12,4" Command="{Binding LoadProductPerformanceCommand}" />
+                            <Button Content="Export PDF" Margin="8,0,0,0" Padding="12,4" Command="{Binding ExportProductPerformancePdfCommand}" />
+                        </StackPanel>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding ProductPerformanceItems}" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="*" />
+                                <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="90" />
+                                <DataGridTextColumn Header="Units" Binding="{Binding UnitsSold}" Width="70" />
+                                <DataGridTextColumn Header="Revenue" Binding="{Binding Revenue, StringFormat={}{0:C}}" Width="90" />
+                                <DataGridTextColumn Header="Cost" Binding="{Binding Cost, StringFormat={}{0:C}}" Width="90" />
+                                <DataGridTextColumn Header="Profit" Binding="{Binding Profit, StringFormat={}{0:C}}" Width="90" />
+                                <DataGridTextColumn Header="Margin %" Binding="{Binding ProfitMarginPercent, StringFormat={}{0:N1}%}" Width="80" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+
+                <!-- Cashier Report (Admin) -->
+                <TabItem Header="Cashier Report" Visibility="{Binding CanViewCashierReport, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <DatePicker SelectedDate="{Binding CashierStartDate}" Width="140" />
+                            <TextBlock Text="to" VerticalAlignment="Center" Margin="8,0" />
+                            <DatePicker SelectedDate="{Binding CashierEndDate}" Width="140" />
+                            <Button Content="Refresh" Margin="8,0,0,0" Padding="12,4" Command="{Binding LoadCashierReportCommand}" />
+                            <Button Content="Export PDF" Margin="8,0,0,0" Padding="12,4" Command="{Binding ExportCashierPdfCommand}" />
+                        </StackPanel>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding CashierReportItems}" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Cashier" Binding="{Binding CashierName}" Width="*" />
+                                <DataGridTextColumn Header="Total Sales" Binding="{Binding TotalSales, StringFormat={}{0:C}}" Width="110" />
+                                <DataGridTextColumn Header="Transactions" Binding="{Binding TotalTransactions}" Width="100" />
+                                <DataGridTextColumn Header="Refunds" Binding="{Binding RefundsIssued}" Width="80" />
+                                <DataGridTextColumn Header="Refund Amount" Binding="{Binding RefundAmount, StringFormat={}{0:C}}" Width="110" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+
+            <Border Background="#CCFFFFFF"
+                    Visibility="{Binding ShowUpgradeOverlay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="Full Reports require a Professional plan"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Foreground="#1F4E79"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Upgrade to unlock daily summaries, analytics charts, and exports."
+                               Margin="0,8,0,16"
+                               Foreground="#666"
+                               HorizontalAlignment="Center" />
+                    <Button Content="Upgrade"
+                            Width="140"
+                            Height="40"
+                            FontWeight="SemiBold"
+                            Background="#1F4E79"
+                            Foreground="White"
+                            Command="{Binding RequestUpgradeCommand}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <TextBlock Grid.Row="2"
+                   Text="{Binding StatusMessage}"
+                   Margin="0,8,0,0"
+                   Foreground="#666" />
+    </Grid>
+</Window>

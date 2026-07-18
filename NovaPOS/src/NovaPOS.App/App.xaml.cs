@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NovaPOS.App.Logging;
 using NovaPOS.App.ViewModels;
+using NovaPOS.App.ViewModels.Reports;
 using NovaPOS.App.ViewModels.Sales;
 using NovaPOS.App.Views;
 using NovaPOS.Core.Constants;
@@ -133,6 +134,7 @@ public partial class App : Application
         services.AddSingleton<ApplicationSessionCoordinator>();
         services.AddSingleton<MainWindow>();
         services.AddScoped<SalesViewModel>();
+        services.AddScoped<ReportsViewModel>();
         services.AddScoped<MainViewModel>(sp =>
         {
             var coordinator = sp.GetRequiredService<ApplicationSessionCoordinator>();

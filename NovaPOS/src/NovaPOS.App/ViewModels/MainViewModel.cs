@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NovaPOS.Core.Enums;
 using NovaPOS.App.ViewModels.Sales;
+using NovaPOS.App.ViewModels.Reports;
 using NovaPOS.Core.Interfaces.Licensing;
 using NovaPOS.Core.Interfaces.Repositories;
 using NovaPOS.Core.Interfaces.Security;
@@ -56,6 +57,9 @@ public partial class MainViewModel : ObservableObject
 
     public SalesViewModel Sales { get; }
 
+    [ObservableProperty]
+    private bool _canViewReports;
+
     public void RefreshLicenseStatus()
     {
         LicenseStatusText = _licenseService.CurrentStatus switch
@@ -77,6 +81,24 @@ public partial class MainViewModel : ObservableObject
             : $"{_currentUserService.CurrentUser.FullName} ({_currentUserService.CurrentUser.Role})";
 
         CanViewAuditLog = _authorizationService.HasPermission(Permission.ViewAuditLog);
+        CanViewReports = _authorizationService.HasPermission(Permission.ViewReports);
+    }
+
+    [RelayCommand]
+    private void OpenReports()
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var vm = scope.ServiceProvider.GetRequiredService<ReportsViewModel>();
+
+        if (!Behaviors.AuthorizationBehavior.CanNavigateTo(vm, _authorizationService))
+        {
+            return;
+        }
+
+        vm.UpgradeRequested += () => OnActivateLicenseRequested?.Invoke();
+        var window = new Views.Reports.ReportsWindow { DataContext = vm, Owner = System.Windows.Application.Current.MainWindow };
+        window.ShowDialog();
+        vm.UpgradeRequested -= () => OnActivateLicenseRequested?.Invoke();
     }
 
     [RelayCommand]
